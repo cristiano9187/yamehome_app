@@ -15,7 +15,6 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
   const totalLodging = data.isCustomRate ? data.customLodgingTotal : (pricePerNight * nights);
   const grandTotal = totalLodging + rates.caution;
   
-  // Calcul de la somme sécurisé
   const totalPaid = (data.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
   const remaining = grandTotal - totalPaid;
 
@@ -37,7 +36,7 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
     <div id="receipt-content" className="bg-white w-[210mm] min-h-[297mm] p-10 shadow-lg text-gray-800 font-sans relative">
       
       {/* Header */}
-      <div className="text-center mb-8 border-b-2 border-blue-900 pb-4">
+      <div className="text-center mb-6 border-b-2 border-blue-900 pb-4">
         <h1 className="text-2xl font-bold text-blue-900 uppercase">YAMEHOME : REÇU DE PAIEMENT</h1>
         <p className="text-sm text-gray-600 mt-1">Location d'appartements, chambres et studios meublés</p>
         <p className="text-xs text-gray-500">+237 656 751 310 | christian@yamehome.com | www.yamehome.com</p>
@@ -48,24 +47,33 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-8 mb-8">
-        <div className="border rounded-lg p-4 bg-gray-50">
-          <h3 className="text-blue-900 font-bold border-b mb-3 pb-1 text-sm uppercase">Client</h3>
-          <p className="text-sm"><span className="font-bold">Nom:</span> {data.firstName} {data.lastName}</p>
-          <p className="text-sm"><span className="font-bold">Tél:</span> {data.phone || 'N/A'}</p>
-          <p className="text-sm"><span className="font-bold">Email:</span> {data.email || 'N/A'}</p>
+      {/* Colonnes Client & Réservation OPTIMISÉES */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        {/* Client Info */}
+        <div className="border rounded-lg p-3 bg-gray-50 flex flex-col justify-center">
+          <h3 className="text-blue-900 font-bold border-b mb-2 pb-1 text-[11px] uppercase">Client</h3>
+          <div className="text-[11px] leading-tight space-y-0.5">
+            <p><span className="font-bold">Nom:</span> {data.firstName} {data.lastName}</p>
+            <p><span className="font-bold">Tél:</span> {data.phone || 'N/A'}</p>
+            <p className="truncate"><span className="font-bold">Email:</span> {data.email || 'N/A'}</p>
+          </div>
         </div>
 
-        <div className="border rounded-lg p-4 bg-gray-50">
-          <h3 className="text-blue-900 font-bold border-b mb-3 pb-1 text-sm uppercase">Réservation</h3>
-          <p className="text-sm"><span className="font-bold">Logement:</span> {data.apartmentName}</p>
-          <p className="text-sm"><span className="font-bold">Lieu:</span> {rates.address}</p>
-          <p className="text-sm"><span className="font-bold">Séjour:</span> {nights} nuit(s)</p>
-          <p className="text-sm">Du {new Date(data.startDate).toLocaleDateString()} au {new Date(data.endDate).toLocaleDateString()}</p>
+        {/* Reservation Info */}
+        <div className="border rounded-lg p-3 bg-gray-50 flex flex-col justify-center">
+          <h3 className="text-blue-900 font-bold border-b mb-2 pb-1 text-[11px] uppercase">Réservation</h3>
+          <div className="text-[11px] leading-tight space-y-0.5">
+            <p className="truncate"><span className="font-bold">Logement:</span> {data.apartmentName}</p>
+            <p className="truncate"><span className="font-bold">Lieu:</span> {rates.address}</p>
+            <p>
+              <span className="font-bold">Séjour:</span> {nights} nts ({new Date(data.startDate).toLocaleDateString('fr-FR')} - {new Date(data.endDate).toLocaleDateString('fr-FR')})
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="mb-8">
+      {/* Financial Details */}
+      <div className="mb-6">
         <h3 className="text-blue-900 font-bold mb-3 text-sm uppercase">Détails Financiers</h3>
         <table className="w-full text-sm">
           <tbody>
@@ -92,7 +100,7 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
               <td className="py-2 pr-2 text-right text-base">{formatCurrency(grandTotal)}</td>
             </tr>
 
-            {/* --- SECTION VERSEMENTS FILTRÉE --- */}
+            {/* SECTION VERSEMENTS FILTRÉE */}
             {(data.payments || []).filter(p => (p.amount || 0) > 0).map((payment) => (
               <tr key={payment.id} className="text-green-700 text-xs border-b border-green-50">
                 <td className="py-1.5 pl-2 italic">
@@ -110,14 +118,15 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
             </tr>
 
             <tr className="border-t-2 border-gray-300">
-              <td className="py-2 pl-2 font-bold text-red-600 uppercase">Reste à Payer</td>
+              <td className="py-2 pl-2 font-bold text-red-600 uppercase text-xs">Reste à Payer</td>
               <td className="py-2 pr-2 text-right font-bold text-red-600 text-lg">{formatCurrency(remaining)}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div className="border rounded-lg p-4 bg-gray-50 mb-10 text-xs">
+      {/* Observations & Conditions */}
+      <div className="border rounded-lg p-4 bg-gray-50 mb-8 text-xs">
         <h3 className="font-bold text-gray-700 mb-2">Observations & Conditions</h3>
         <ul className="list-disc pl-4 space-y-1 text-gray-600">
           <li>Check-in: 15h00 | Check-out: 11h30.</li>
@@ -145,6 +154,7 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
         )}
       </div>
 
+      {/* Footer Signature */}
       <div className="mt-auto">
         <div className="flex justify-end mb-4 pr-4">
           <div className="text-center">
@@ -154,7 +164,7 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
             </div>
           </div>
         </div>
-        <p className="text-center text-[10px] text-gray-400 italic mt-8">Merci pour votre confiance !</p>
+        <p className="text-center text-[10px] text-gray-400 italic mt-6">Merci pour votre confiance !</p>
       </div>
 
     </div>
