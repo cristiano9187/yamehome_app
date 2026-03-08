@@ -15,11 +15,10 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
   const totalLodging = data.isCustomRate ? data.customLodgingTotal : (pricePerNight * nights);
   const grandTotal = totalLodging + rates.caution;
   
-  // Calcul de la somme de tous les versements
-  const totalPaid = data.payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  // Calcul de la somme sécurisé
+  const totalPaid = (data.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
   const remaining = grandTotal - totalPaid;
 
-  // Calcul du pourcentage de réduction (si tarif standard vs négocié)
   const standardPrice = rates.prix;
   const discountPercent = standardPrice > 0 ? Math.round(((standardPrice - pricePerNight) / standardPrice) * 100) : 0;
 
@@ -50,7 +49,6 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
       </div>
 
       <div className="grid grid-cols-2 gap-8 mb-8">
-        {/* Client Info */}
         <div className="border rounded-lg p-4 bg-gray-50">
           <h3 className="text-blue-900 font-bold border-b mb-3 pb-1 text-sm uppercase">Client</h3>
           <p className="text-sm"><span className="font-bold">Nom:</span> {data.firstName} {data.lastName}</p>
@@ -58,7 +56,6 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
           <p className="text-sm"><span className="font-bold">Email:</span> {data.email || 'N/A'}</p>
         </div>
 
-        {/* Reservation Info */}
         <div className="border rounded-lg p-4 bg-gray-50">
           <h3 className="text-blue-900 font-bold border-b mb-3 pb-1 text-sm uppercase">Réservation</h3>
           <p className="text-sm"><span className="font-bold">Logement:</span> {data.apartmentName}</p>
@@ -68,7 +65,6 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* Financial Details */}
       <div className="mb-8">
         <h3 className="text-blue-900 font-bold mb-3 text-sm uppercase">Détails Financiers</h3>
         <table className="w-full text-sm">
@@ -96,14 +92,14 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
               <td className="py-2 pr-2 text-right text-base">{formatCurrency(grandTotal)}</td>
             </tr>
 
-            {/* --- NOUVELLE SECTION : LISTE DES VERSEMENTS --- */}
-            {data.payments.map((payment, index) => (
+            {/* --- SECTION VERSEMENTS FILTRÉE --- */}
+            {(data.payments || []).filter(p => (p.amount || 0) > 0).map((payment) => (
               <tr key={payment.id} className="text-green-700 text-xs border-b border-green-50">
                 <td className="py-1.5 pl-2 italic">
                   Versement le {new Date(payment.date).toLocaleDateString()} ({payment.method})
                 </td>
                 <td className="py-1.5 pr-2 text-right font-bold italic">
-                   + {formatCurrency(payment.amount)}
+                   + {formatCurrency(payment.amount || 0)}
                 </td>
               </tr>
             ))}
@@ -121,7 +117,6 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
         </table>
       </div>
 
-      {/* Observations & Conditions */}
       <div className="border rounded-lg p-4 bg-gray-50 mb-10 text-xs">
         <h3 className="font-bold text-gray-700 mb-2">Observations & Conditions</h3>
         <ul className="list-disc pl-4 space-y-1 text-gray-600">
@@ -130,7 +125,6 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
           {data.electricityCharge && <li><strong>Électricité à la charge du client.</strong></li>}
           {data.packEco && <li><strong>Pack ECO appliqué.</strong></li>}
           
-          {/* Politique d'Annulation */}
           <li className="mt-2 text-[9px] leading-tight">
             <span className="font-bold underline">Politique d'Annulation (sur acompte) :</span>
             <ul className="list-disc ml-4 mt-1">
@@ -151,7 +145,6 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
         )}
       </div>
 
-      {/* Footer Signature */}
       <div className="mt-auto">
         <div className="flex justify-end mb-4 pr-4">
           <div className="text-center">
