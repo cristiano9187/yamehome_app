@@ -4,9 +4,14 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+    
+    // On détecte si on est dans l'environnement Vercel
+    const isVercel = process.env.VERCEL === '1' || mode === 'production' && !process.env.GITHUB_ACTIONS;
+
     return {
-      // 👇 AJOUTE CETTE LIGNE OBLIGATOIREMENT
-      base: '/yamehome-v2-test/',
+      // MODIFICATION : Choix dynamique du chemin de base
+      // Si Vercel : '/' | Si GitHub Pages : '/yamehome-v2-test/'
+      base: isVercel ? '/' : '/yamehome-v2-test/',
       
       server: {
         port: 3000,
