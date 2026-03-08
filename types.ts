@@ -25,6 +25,7 @@ export interface Payment {
 }
 // --- MODIFIE CELLE-CI (Structure du reçu complet) ---
 export interface ReceiptData {
+  receiptId: string; // Ajoute cette ligne tout en haut de l'interface
   firstName: string;
   lastName: string;
   phone: string;
