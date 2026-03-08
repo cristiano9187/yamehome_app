@@ -21,7 +21,6 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
   const standardPrice = rates.prix;
   const discountPercent = standardPrice > 0 ? Math.round(((standardPrice - pricePerNight) / standardPrice) * 100) : 0;
 
-  const receiptNumber = `RC-${Math.floor(Math.random() * 10000000)}`;
   const emissionDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
   if (!data.apartmentName) {
@@ -43,7 +42,7 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
         <div className="flex justify-center gap-4 mt-2 text-xs font-semibold text-gray-700">
           <span>Date d'émission: {emissionDate}</span>
           <span>|</span>
-          <span>N°: {receiptNumber}</span>
+          <span>N°: {data.receiptId}</span>
         </div>
       </div>
 

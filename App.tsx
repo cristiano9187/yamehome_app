@@ -4,9 +4,12 @@ import { ReceiptData } from './types';
 import ReceiptPreview from './components/ReceiptPreview';
 
 function App() {
-  // --- ÉTATS ---
-  const [formData, setFormData] = useState<ReceiptData>({
-    receiptId: `RC-${Date.now()}`, 
+  // --- GÉNÉRATEUR D'ID COURT (6 CHIFFRES) ---
+  const generateNewId = () => `RC-${Math.floor(100000 + Math.random() * 900000)}`;
+
+  // --- ÉTAT INITIAL POUR LE RESET ---
+  const getInitialState = (): ReceiptData => ({
+    receiptId: generateNewId(),
     firstName: '',
     lastName: '',
     phone: '',
@@ -26,10 +29,12 @@ function App() {
     observations: ''
   });
 
+  // --- ÉTATS ---
+  const [formData, setFormData] = useState<ReceiptData>(getInitialState());
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [searchId, setSearchId] = useState(''); // Pour la recherche de reçu
+  const [searchId, setSearchId] = useState('');
 
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfajRxCsKs0CLU4oiA6g5sirHUJHB3QdlJPeKOrjgFFDNQIeqbOxRlDqJ-VjAKZAuh2Q/exec';
 
@@ -42,6 +47,15 @@ function App() {
       window.removeEventListener('offline', handleStatusChange);
     };
   }, []);
+
+  // --- FONCTION : NOUVEAU CLIENT (RESET) ---
+  const resetForm = () => {
+    if (window.confirm("Voulez-vous vraiment créer un nouveau reçu ? Cela videra le formulaire actuel.")) {
+      setFormData(getInitialState());
+      setSearchId('');
+      setSaveStatus('idle');
+    }
+  };
 
   // --- LOGIQUE GOOGLE SHEETS : SAUVEGARDER ---
   const saveToSheets = async () => {
@@ -91,12 +105,13 @@ function App() {
     if (!searchId) return;
     setIsSaving(true);
     try {
-      const response = await fetch(`${SCRIPT_URL}?id=${searchId.trim()}`);
+      const formattedSearchId = searchId.toUpperCase().startsWith('RC-') ? searchId.toUpperCase() : `RC-${searchId}`;
+      const response = await fetch(`${SCRIPT_URL}?id=${formattedSearchId}`);
       const data = await response.json();
       if (data.error) {
         alert("Reçu introuvable");
       } else {
-        setFormData(data); // Remplit tout le formulaire d'un coup
+        setFormData(data);
         alert("Reçu chargé avec succès !");
       }
     } catch (error) {
@@ -144,9 +159,12 @@ function App() {
       <div className="w-full md:w-1/3 text-white p-6 overflow-y-auto h-auto md:h-screen print:hidden shadow-2xl">
         <div className="mb-6 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-blue-400">YameHome Generator</h1>
-          <span className={`text-[10px] px-2 py-1 rounded font-bold ${isOffline ? 'bg-orange-500' : 'bg-green-600'}`}>
-            {isOffline ? 'OFFLINE' : 'ONLINE'}
-          </span>
+          <button 
+            onClick={resetForm}
+            className="bg-red-500 hover:bg-red-600 text-white text-[10px] px-2 py-1 rounded font-bold transition-all shadow-lg"
+          >
+            NOUVEAU REÇU
+          </button>
         </div>
 
         {/* SECTION RECHERCHE */}
@@ -155,7 +173,7 @@ function App() {
           <div className="flex gap-2">
             <input 
               type="text" 
-              placeholder="Ex: RC-174..." 
+              placeholder="Ex: 815317" 
               className="flex-1 bg-gray-800 rounded p-2 text-xs border border-blue-400/50 outline-none focus:border-blue-400"
               value={searchId}
               onChange={(e) => setSearchId(e.target.value)}
@@ -252,12 +270,12 @@ function App() {
         <div className="mb-4 no-print flex w-full max-w-[210mm] justify-between items-center print:hidden">
           <div className="flex flex-col">
             <h2 className="text-gray-600 font-bold">Aperçu en direct (A4)</h2>
-            <span className="text-[10px] text-gray-400 font-mono">{formData.receiptId}</span>
+            <span className="text-[10px] text-gray-400 font-mono font-bold">{formData.receiptId}</span>
           </div>
           <div className="flex gap-3">
             <button onClick={saveToSheets} disabled={isSaving} className={`${saveStatus === 'success' ? 'bg-green-600' : 'bg-orange-500'} text-white font-bold py-2 px-4 rounded shadow flex items-center transition-all disabled:opacity-50`}>
               <span className="mr-2">{isSaving ? '⏳' : '💾'}</span>
-              {isSaving ? 'En cours...' : saveStatus === 'success' ? 'Enregistré' : 'Sauvegarder'}
+              {isSaving ? 'Sauvegarde...' : saveStatus === 'success' ? 'Enregistré' : 'Sauvegarder'}
             </button>
             <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow flex items-center">
               Imprimer / PDF
