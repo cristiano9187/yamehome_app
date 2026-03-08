@@ -174,6 +174,14 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
                 <li>Départ tardif: pénalité de {formatCurrency(fin.lateCheckoutFee)}.</li>
                 {data.electricityCharge && <li><strong>Électricité à la charge du client.</strong></li>}
                 {data.packEco && <li><strong>Pack ECO appliqué.</strong></li>}
+                <li className="mt-2 text-[9px] leading-tight">
+  <span className="font-bold underline">Politique d'Annulation (1/3 du montant total hors caution) :</span>
+  <ul className="list-disc ml-4 mt-1">
+    <li><span className="font-semibold text-green-700">100% remboursé :</span> Annulation sous 24h (si séjour dans +14j).</li>
+    <li><span className="font-semibold text-orange-600">50% remboursé :</span> Jusqu'à 7 jours avant l'arrivée.</li>
+    <li><span className="font-semibold text-red-600">Non remboursable :</span> Moins de 7 jours avant l'arrivée.</li>
+  </ul>
+</li>
                 {data.observations && <li><em>Note: {data.observations}</em></li>}
               </ul>
               
