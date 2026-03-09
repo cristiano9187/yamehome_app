@@ -37,14 +37,19 @@ function App() {
 
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfajRxCsKs0CLU4oiA6g5sirHUJHB3QdlJPeKOrjgFFDNQIeqbOxRlDqJ-VjAKZAuh2Q/exec';
 
-  // --- LOGIQUE TITRE DYNAMIQUE (POUR NOM DU PDF SUR MOBILE) ---
+  // --- LOGIQUE TITRE DYNAMIQUE : POUR NOMMER LE PDF AUTOMATIQUEMENT ---
   useEffect(() => {
     const name = `${formData.firstName} ${formData.lastName}`.trim().replace(/\s+/g, '_');
     const apt = formData.apartmentName.split(' - ')[0].replace(/\s+/g, '_');
     
+    // Génération d'une date propre (ex: 09-03-2026)
+    const today = new Date();
+    const dateStr = `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`;
+    
     if (name || apt) {
-      // On met à jour le titre du document en temps réel
-      document.title = `Reçu_${name || 'Client'}_${apt || 'Apt'}`;
+      // On met à jour le titre du navigateur EN TEMPS RÉEL
+      // C'est ce titre que l'iPhone/PC utilise comme nom de fichier PDF
+      document.title = `Reçu_${name || 'Client'}_${apt || 'Apt'}_${dateStr}`;
     } else {
       document.title = "YameHome - Générateur de Reçus";
     }
