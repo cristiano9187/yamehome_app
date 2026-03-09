@@ -4,7 +4,7 @@ import { ReceiptData } from './types';
 import ReceiptPreview from './components/ReceiptPreview';
 
 function App() {
-  // --- GÉNÉRATEUR D'ID COURT (6 CHIFFRES) ---
+  // --- GÉNÉRATEUR D'ID ---
   const generateNewId = () => `RC-${Math.floor(100000 + Math.random() * 900000)}`;
 
   // --- ÉTAT INITIAL ---
@@ -37,6 +37,19 @@ function App() {
 
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfajRxCsKs0CLU4oiA6g5sirHUJHB3QdlJPeKOrjgFFDNQIeqbOxRlDqJ-VjAKZAuh2Q/exec';
 
+  // --- LOGIQUE TITRE DYNAMIQUE (POUR NOM DU PDF SUR MOBILE) ---
+  useEffect(() => {
+    const name = `${formData.firstName} ${formData.lastName}`.trim().replace(/\s+/g, '_');
+    const apt = formData.apartmentName.split(' - ')[0].replace(/\s+/g, '_');
+    
+    if (name || apt) {
+      // On met à jour le titre du document en temps réel
+      document.title = `Reçu_${name || 'Client'}_${apt || 'Apt'}`;
+    } else {
+      document.title = "YameHome - Générateur de Reçus";
+    }
+  }, [formData.firstName, formData.lastName, formData.apartmentName]);
+
   useEffect(() => {
     const handleStatusChange = () => setIsOffline(!navigator.onLine);
     window.addEventListener('online', handleStatusChange);
@@ -49,7 +62,7 @@ function App() {
 
   // --- ACTIONS ---
   const resetForm = () => {
-    if (window.confirm("Voulez-vous vraiment créer un nouveau reçu ? Cela videra le formulaire actuel.")) {
+    if (window.confirm("Voulez-vous vraiment créer un nouveau reçu ?")) {
       setFormData(getInitialState());
       setSearchId('');
       setSaveStatus('idle');
@@ -57,22 +70,12 @@ function App() {
   };
 
   const handlePrint = () => {
-    const originalTitle = document.title;
-    // Préparation du nom de fichier propre
-    const clientName = `${formData.firstName}_${formData.lastName}`.trim().replace(/\s+/g, '_') || 'Client';
-    const aptName = formData.apartmentName.split(' - ')[0].replace(/\s+/g, '_') || 'Appartement';
-    const dateStr = new Date().toISOString().slice(0, 10);
-    
-    document.title = `Reçu_${clientName}_${aptName}_${dateStr}`;
     window.print();
-    
-    // On remet le titre original après l'impression
-    setTimeout(() => { document.title = originalTitle; }, 1000);
   };
 
   const saveToSheets = async () => {
     if (!formData.apartmentName || !formData.lastName) {
-      alert("Veuillez remplir au moins le nom du client et l'appartement.");
+      alert("Remplir Nom et Appartement");
       return;
     }
     setIsSaving(true);
@@ -91,9 +94,7 @@ function App() {
       apartmentName: formData.apartmentName,
       startDate: formData.startDate,
       endDate: formData.endDate,
-      grandTotal,
-      totalPaid,
-      remaining: grandTotal - totalPaid,
+      grandTotal, totalPaid, remaining: grandTotal - totalPaid,
       fullData: formData 
     };
 
@@ -101,11 +102,7 @@ function App() {
       await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
       setSaveStatus('success');
       setTimeout(() => setSaveStatus('idle'), 3000);
-    } catch (error) {
-      setSaveStatus('error');
-    } finally {
-      setIsSaving(false);
-    }
+    } catch (error) { setSaveStatus('error'); } finally { setIsSaving(false); }
   };
 
   const loadReceipt = async () => {
@@ -115,16 +112,9 @@ function App() {
       const formattedId = searchId.toUpperCase().startsWith('RC-') ? searchId.toUpperCase() : `RC-${searchId}`;
       const response = await fetch(`${SCRIPT_URL}?id=${formattedId}`);
       const data = await response.json();
-      if (data.error) alert("Reçu introuvable");
-      else {
-        setFormData(data);
-        alert("Reçu chargé avec succès !");
-      }
-    } catch (error) {
-      alert("Erreur lors de la récupération.");
-    } finally {
-      setIsSaving(false);
-    }
+      if (data.error) alert("Non trouvé");
+      else { setFormData(data); alert("Chargé !"); }
+    } catch (error) { alert("Erreur"); } finally { setIsSaving(false); }
   };
 
   const addPayment = () => {
@@ -163,38 +153,36 @@ function App() {
       {/* GAUCHE : FORMULAIRE */}
       <div className="w-full md:w-1/3 text-white p-6 overflow-y-auto h-auto md:h-screen print:hidden shadow-2xl">
         <div className="mb-6 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-blue-400">YameHome</h1>
-          <button onClick={resetForm} className="bg-red-500 hover:bg-red-600 text-white text-[10px] px-2 py-1 rounded font-bold transition-all shadow-lg">
-            NOUVEAU REÇU
+          <h1 className="text-xl font-bold text-blue-400">YameHome</h1>
+          <button onClick={resetForm} className="bg-red-500 hover:bg-red-600 text-white text-[9px] px-2 py-1 rounded font-bold uppercase transition-all shadow-lg">
+            Nouveau Client
           </button>
         </div>
 
         {/* RECHERCHE */}
         <div className="bg-blue-900/20 p-4 rounded border border-blue-500/50 mb-6">
-          <label className="text-blue-300 text-[10px] font-bold uppercase block mb-2">Rechercher un reçu</label>
+          <label className="text-blue-300 text-[10px] font-bold uppercase block mb-2">Charger un reçu</label>
           <div className="flex gap-2">
-            <input type="text" placeholder="Ex: 123456" className="flex-1 bg-gray-800 rounded p-2 text-xs border border-blue-400/50 outline-none" value={searchId} onChange={(e) => setSearchId(e.target.value)} />
-            <button onClick={loadReceipt} className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-3 py-2 rounded font-bold">CHARGER</button>
+            <input type="text" placeholder="Ex: 815317" className="flex-1 bg-gray-800 rounded p-2 text-xs border border-blue-400/50 outline-none" value={searchId} onChange={(e) => setSearchId(e.target.value)} />
+            <button onClick={loadReceipt} className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-3 py-2 rounded font-bold">OK</button>
           </div>
         </div>
 
         <form className="space-y-4 text-sm" onSubmit={(e) => e.preventDefault()}>
-          {/* CLIENT */}
           <div className="bg-gray-800 p-4 rounded border border-gray-700">
             <h3 className="text-gray-400 uppercase text-xs font-bold mb-3">Client</h3>
             <div className="grid grid-cols-2 gap-3">
               <input type="text" name="firstName" value={formData.firstName} placeholder="Prénom" className="w-full bg-gray-700 rounded p-2 border border-gray-600" onChange={handleChange} />
               <input type="text" name="lastName" value={formData.lastName} placeholder="Nom" className="w-full bg-gray-700 rounded p-2 border border-gray-600" onChange={handleChange} />
             </div>
-            <input type="tel" name="phone" value={formData.phone} placeholder="Tél" className="w-full mt-3 bg-gray-700 rounded p-2 border border-gray-600" onChange={handleChange} />
+            <input type="tel" name="phone" value={formData.phone} placeholder="Téléphone" className="w-full mt-3 bg-gray-700 rounded p-2 border border-gray-600" onChange={handleChange} />
             <input type="email" name="email" value={formData.email} placeholder="Email" className="w-full mt-3 bg-gray-700 rounded p-2 border border-gray-600" onChange={handleChange} />
           </div>
 
-          {/* RESERVATION */}
           <div className="bg-gray-800 p-4 rounded border border-gray-700">
             <h3 className="text-gray-400 uppercase text-xs font-bold mb-3">Réservation</h3>
-            <select name="apartmentName" value={formData.apartmentName} className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3" onChange={handleChange}>
-              <option value="">-- Choisir --</option>
+            <select name="apartmentName" value={formData.apartmentName} className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 text-xs" onChange={handleChange}>
+              <option value="">-- Choisir Appartement --</option>
               {Object.keys(TARIFS).map(key => <option key={key} value={key}>{key}</option>)}
             </select>
             <div className="grid grid-cols-2 gap-3">
@@ -203,25 +191,19 @@ function App() {
             </div>
           </div>
 
-          {/* TARIFS & VERSEMENTS */}
           <div className="bg-gray-800 p-4 rounded border border-gray-700">
-            <h3 className="text-gray-400 uppercase text-xs font-bold mb-3">Tarification</h3>
-            <div className="flex items-center mb-2">
-              <input type="checkbox" id="isCustom" name="isCustomRate" checked={formData.isCustomRate} onChange={handleChange} className="mr-2" />
-              <label htmlFor="isCustom" className="text-xs text-yellow-400">Tarif Plateforme (Total)</label>
+            <h3 className="text-gray-400 uppercase text-xs font-bold mb-3">Versements</h3>
+            <div className="flex gap-4 mb-3">
+              <label className="flex items-center text-[10px]"><input type="checkbox" name="isCustomRate" checked={formData.isCustomRate} onChange={handleChange} className="mr-1" /> Platef.</label>
+              <label className="flex items-center text-[10px]"><input type="checkbox" name="isNegotiatedRate" checked={formData.isNegotiatedRate} onChange={handleChange} className="mr-1" /> Négocié</label>
             </div>
-            {formData.isCustomRate && <input type="number" name="customLodgingTotal" value={formData.customLodgingTotal} className="w-full bg-gray-700 rounded p-2 border border-yellow-600 text-yellow-300 mb-3 text-xs" onChange={handleChange} />}
-
-            <div className="flex items-center mb-2">
-              <input type="checkbox" id="isNegotiated" name="isNegotiatedRate" checked={formData.isNegotiatedRate} onChange={handleChange} className="mr-2" />
-              <label htmlFor="isNegotiated" className="text-xs text-blue-400">Tarif Négocié (Nuit)</label>
-            </div>
-            {formData.isNegotiatedRate && <input type="number" name="negotiatedPricePerNight" value={formData.negotiatedPricePerNight} className="w-full bg-gray-700 rounded p-2 border border-blue-500 text-blue-300 mb-3 text-xs" onChange={handleChange} />}
+            {formData.isCustomRate && <input type="number" name="customLodgingTotal" value={formData.customLodgingTotal} className="w-full bg-gray-700 rounded p-2 border border-yellow-600 text-yellow-300 mb-3 text-xs" placeholder="Total séjour" onChange={handleChange} />}
+            {formData.isNegotiatedRate && <input type="number" name="negotiatedPricePerNight" value={formData.negotiatedPricePerNight} className="w-full bg-gray-700 rounded p-2 border border-blue-500 text-blue-300 mb-3 text-xs" placeholder="Prix nuit" onChange={handleChange} />}
 
             <div className="mt-4 border-t border-gray-700 pt-3">
-              <div className="flex justify-between items-center mb-2 text-[10px] font-bold text-gray-400 uppercase">
-                <span>Versements</span>
-                <button type="button" onClick={addPayment} className="bg-blue-600 text-white px-2 py-0.5 rounded">+ ADD</button>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] font-bold text-gray-400">DETAIL</span>
+                <button type="button" onClick={addPayment} className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px]">+ ADD</button>
               </div>
               {formData.payments.map((p, idx) => (
                 <div key={p.id} className="bg-gray-700/40 p-2 rounded mb-2 border border-gray-600 relative">
@@ -240,14 +222,14 @@ function App() {
 
           <div className="bg-gray-800 p-4 rounded border border-gray-700">
             <h3 className="text-gray-400 uppercase text-xs font-bold mb-3">Signature & Note</h3>
-            <div className="flex gap-4 mb-3">
-              <label className="flex items-center text-[10px]"><input type="checkbox" name="electricityCharge" checked={formData.electricityCharge} onChange={handleChange} className="mr-1" /> Élec</label>
-              <label className="flex items-center text-[10px]"><input type="checkbox" name="packEco" checked={formData.packEco} onChange={handleChange} className="mr-1" /> Pack ECO</label>
+            <div className="flex gap-4 mb-3 text-[10px]">
+              <label className="flex items-center"><input type="checkbox" name="electricityCharge" checked={formData.electricityCharge} onChange={handleChange} className="mr-1" /> Élec client</label>
+              <label className="flex items-center"><input type="checkbox" name="packEco" checked={formData.packEco} onChange={handleChange} className="mr-1" /> Pack ECO</label>
             </div>
             <select name="hosts" multiple value={formData.hosts} onChange={handleChange} className="w-full bg-gray-700 rounded p-2 text-[10px] h-20 mb-3 border border-gray-600">
               {HOSTS.map(h => <option key={h.id} value={h.label}>{h.label}</option>)}
             </select>
-            <input type="text" name="signature" value={formData.signature} placeholder="Nom Signature" className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 text-xs" onChange={handleChange} />
+            <input type="text" name="signature" value={formData.signature} placeholder="Signature" className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 text-xs" onChange={handleChange} />
             <textarea name="observations" value={formData.observations} rows={2} placeholder="Observations..." className="w-full bg-gray-700 rounded p-2 border border-gray-600 text-xs" onChange={handleChange}></textarea>
           </div>
         </form>
@@ -255,16 +237,16 @@ function App() {
 
       {/* DROITE : APERÇU */}
       <div className="w-full md:w-2/3 bg-gray-200 p-2 md:p-8 flex flex-col items-start md:items-center overflow-y-auto h-auto md:h-screen preview-container">
-        <div className="mb-4 no-print flex w-full max-w-[210mm] justify-between items-center print:hidden">
+        <div className="mb-4 no-print flex w-full max-w-[210mm] justify-between items-center print:hidden px-2">
           <div className="flex flex-col">
-            <h2 className="text-gray-600 font-bold">Aperçu Reçu</h2>
+            <h2 className="text-gray-600 font-bold text-sm">Aperçu Reçu</h2>
             <span className="text-[10px] text-gray-400 font-mono font-bold uppercase">{formData.receiptId}</span>
           </div>
           <div className="flex gap-2">
-            <button onClick={saveToSheets} disabled={isSaving} className={`${saveStatus === 'success' ? 'bg-green-600' : 'bg-orange-500'} text-white font-bold py-2 px-4 rounded text-xs transition-all disabled:opacity-50`}>
-              {isSaving ? '⏳' : saveStatus === 'success' ? 'OK' : 'SAUVER'}
+            <button onClick={saveToSheets} disabled={isSaving} className={`${saveStatus === 'success' ? 'bg-green-600' : 'bg-orange-500'} text-white font-bold py-2 px-3 rounded text-[10px] transition-all disabled:opacity-50 shadow`}>
+              {isSaving ? '...' : saveStatus === 'success' ? 'V' : 'SAUVER'}
             </button>
-            <button onClick={handlePrint} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-xs shadow">
+            <button onClick={handlePrint} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded text-[10px] shadow">
               IMPRIMER
             </button>
           </div>
