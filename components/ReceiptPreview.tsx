@@ -7,7 +7,7 @@ interface ReceiptPreviewProps {
 }
 
 const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
-  const nights = (new Date(data.endDate).getTime() - new Date(data.startDate).getTime()) / (1000 * 3600 * 24) || 0;
+  const nights = Math.max(0, Math.ceil((new Date(data.endDate).getTime() - new Date(data.startDate).getTime()) / (1000 * 3600 * 24)));
   const rates = getRateForApartment(data.apartmentName, nights);
 
   // --- LOGIQUE DE CALCUL ---

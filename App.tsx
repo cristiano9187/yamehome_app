@@ -64,7 +64,11 @@ function App() {
       return;
     }
     setIsSaving(true);
-    const nights = (new Date(formData.endDate).getTime() - new Date(formData.startDate).getTime()) / (1000 * 3600 * 24) || 0;
+    
+    // Calcul sécurisé des nuits
+    const diffTime = new Date(formData.endDate).getTime() - new Date(formData.startDate).getTime();
+    const nights = Math.max(0, Math.ceil(diffTime / (1000 * 3600 * 24)));
+    
     const rates = getRateForApartment(formData.apartmentName, nights);
     const pricePerNight = formData.isNegotiatedRate ? (formData.negotiatedPricePerNight || 0) : rates.prix;
     const totalLodging = formData.isCustomRate ? formData.customLodgingTotal : (pricePerNight * nights);
@@ -265,8 +269,8 @@ function App() {
         </form>
       </div>
 
-      {/* DROITE : APERÇU */}
-      <div className="w-full md:w-2/3 bg-gray-200 p-4 md:p-8 flex flex-col items-center overflow-y-auto h-auto md:h-screen">
+      {/* DROITE : APERÇU (AVEC FIX MOBILE) */}
+      <div className="w-full md:w-2/3 bg-gray-200 p-2 md:p-8 flex flex-col items-start md:items-center overflow-y-auto h-auto md:h-screen preview-container">
         <div className="mb-4 no-print flex w-full max-w-[210mm] justify-between items-center print:hidden">
           <div className="flex flex-col">
             <h2 className="text-gray-600 font-bold">Aperçu en direct (A4)</h2>
@@ -275,10 +279,10 @@ function App() {
           <div className="flex gap-3">
             <button onClick={saveToSheets} disabled={isSaving} className={`${saveStatus === 'success' ? 'bg-green-600' : 'bg-orange-500'} text-white font-bold py-2 px-4 rounded shadow flex items-center transition-all disabled:opacity-50`}>
               <span className="mr-2">{isSaving ? '⏳' : '💾'}</span>
-              {isSaving ? 'Sauvegarde...' : saveStatus === 'success' ? 'Enregistré' : 'Sauvegarder'}
+              {isSaving ? '...' : saveStatus === 'success' ? 'OK' : 'Sauver'}
             </button>
             <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow flex items-center">
-              Imprimer / PDF
+              Imprimer
             </button>
           </div>
         </div>
