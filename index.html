@@ -17,62 +17,57 @@
           size: A4; 
         }
         
-        /* On force le fond en blanc pur partout */
-        html, body { 
+        /* On force le fond blanc sur les parents, mais on ne les cache pas ! */
+        html, body, #root, .min-h-screen { 
           background: white !important;
           margin: 0 !important;
           padding: 0 !important;
+          height: auto !important;
           -webkit-print-color-adjust: exact !important; 
           print-color-adjust: exact !important;
         }
 
-        /* ON CACHE TOTALEMENT LE FORMULAIRE SOMBRE (Le responsable du rectangle noir) */
-        /* On cible les classes Tailwind génériques pour être sûr de ne rien rater */
-        .print\:hidden, 
-        .no-print, 
-        div[class*="bg-gray-900"], 
-        aside, 
-        form { 
+        /* On cache UNIQUEMENT le formulaire de saisie et les boutons */
+        /* La classe 'print:hidden' de Tailwind va s'occuper du gros du travail */
+        .print\:hidden, .no-print, form, button { 
           display: none !important; 
-          opacity: 0 !important;
-          visibility: hidden !important;
         }
 
-        /* On réinitialise le conteneur principal de l'aperçu */
-        div[class*="bg-gray-200"] {
+        /* On réinitialise la colonne de droite pour qu'elle prenne toute la place */
+        div.w-full.md\:w-2\/3 {
+          width: 100% !important;
           background: white !important;
           padding: 0 !important;
           margin: 0 !important;
           display: block !important;
-          width: 100% !important;
-          height: auto !important;
+          overflow: visible !important;
         }
 
-        /* Le reçu lui-même : on le plaque proprement */
+        /* Le reçu lui-même : On force l'affichage sans aucune transformation */
         #receipt-content {
-          position: static !important;
+          display: block !important;
+          position: relative !important;
           width: 210mm !important;
           min-height: 297mm !important;
           margin: 0 !important;
           padding: 10mm !important;
           box-shadow: none !important;
           border: none !important;
-          transform: scale(1) !important; /* On s'assure que l'échelle est réelle à l'impression */
+          transform: scale(1) !important; /* TRÈS IMPORTANT pour le PDF mobile */
         }
       }
 
-      /* --- ADAPTATION VISUELLE POUR L'ÉCRAN MOBILE (HORS IMPRESSION) --- */
+      /* --- ADAPTATION VISUELLE ÉCRAN MOBILE (PAS IMPRESSION) --- */
       @media screen and (max-width: 768px) {
         #receipt-content {
           min-width: 210mm;
-          transform: scale(0.38); /* Légèrement agrandi pour lisibilité sur écran */
+          transform: scale(0.38);
           transform-origin: top left;
           margin-bottom: -180mm;
         }
         .preview-container {
           overflow-x: auto !important;
           display: block !important;
-          -webkit-overflow-scrolling: touch;
         }
       }
     </style>
