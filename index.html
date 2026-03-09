@@ -28,7 +28,6 @@
         }
 
         /* On cache UNIQUEMENT le formulaire de saisie et les boutons */
-        /* La classe 'print:hidden' de Tailwind va s'occuper du gros du travail */
         .print\:hidden, .no-print, form, button { 
           display: none !important; 
         }
@@ -53,7 +52,14 @@
           padding: 10mm !important;
           box-shadow: none !important;
           border: none !important;
-          transform: scale(1) !important; /* TRÈS IMPORTANT pour le PDF mobile */
+          transform: scale(1) !important;
+        }
+
+        /* --- SUPPRESSION DES ÉLÉMENTS VERCEL (Toolbar, Feedback, etc.) --- */
+        [id^="vercel-"], .vercel-toolbar, #vercel-live-feedback, [class*="vercel"] { 
+          display: none !important; 
+          opacity: 0 !important;
+          visibility: hidden !important;
         }
       }
 
