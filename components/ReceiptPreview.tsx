@@ -46,9 +46,8 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* Colonnes Client & Réservation OPTIMISÉES */}
+      {/* Client & Réservation */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        {/* Client Info */}
         <div className="border rounded-lg p-3 bg-gray-50 flex flex-col justify-center">
           <h3 className="text-blue-900 font-bold border-b mb-2 pb-1 text-[11px] uppercase">Client</h3>
           <div className="text-[11px] leading-tight space-y-0.5">
@@ -58,20 +57,19 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
           </div>
         </div>
 
-        {/* Reservation Info */}
         <div className="border rounded-lg p-3 bg-gray-50 flex flex-col justify-center">
           <h3 className="text-blue-900 font-bold border-b mb-2 pb-1 text-[11px] uppercase">Réservation</h3>
           <div className="text-[11px] leading-tight space-y-0.5">
             <p className="truncate"><span className="font-bold">Logement:</span> {data.apartmentName}</p>
             <p className="truncate"><span className="font-bold">Lieu:</span> {rates.address}</p>
             <p>
-              <span className="font-bold">Séjour:</span> {nights} nts ({new Date(data.startDate).toLocaleDateString('fr-FR')} - {new Date(data.endDate).toLocaleDateString('fr-FR')})
+              <span className="font-bold">Séjour:</span> {nights} {nights > 1 ? 'nuits' : 'nuit'} ({new Date(data.startDate).toLocaleDateString('fr-FR')} - {new Date(data.endDate).toLocaleDateString('fr-FR')})
             </p>
           </div>
         </div>
       </div>
 
-      {/* Financial Details */}
+      {/* Détails Financiers */}
       <div className="mb-6">
         <h3 className="text-blue-900 font-bold mb-3 text-sm uppercase">Détails Financiers</h3>
         <table className="w-full text-sm">
@@ -99,7 +97,7 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
               <td className="py-2 pr-2 text-right text-base">{formatCurrency(grandTotal)}</td>
             </tr>
 
-            {/* SECTION VERSEMENTS FILTRÉE */}
+            {/* Versements */}
             {(data.payments || []).filter(p => (p.amount || 0) > 0).map((payment) => (
               <tr key={payment.id} className="text-green-700 text-xs border-b border-green-50">
                 <td className="py-1.5 pl-2 italic">
@@ -126,16 +124,16 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
 
       {/* Observations & Conditions */}
       <div className="border rounded-lg p-4 bg-gray-50 mb-8 text-xs">
-        <h3 className="font-bold text-gray-700 mb-2">Observations & Conditions</h3>
-        <ul className="list-disc pl-4 space-y-1 text-gray-600">
+        <h3 className="font-bold text-gray-700 mb-2 underline uppercase">Observations & Conditions</h3>
+        <ul className="list-disc pl-4 space-y-1.5 text-gray-600">
           <li>Check-in: 15h00 | Check-out: 11h30.</li>
           <li>Départ tardif: pénalité de {formatCurrency(12000)}.</li>
           {data.electricityCharge && <li><strong>Électricité à la charge du client.</strong></li>}
           {data.packEco && <li><strong>Pack ECO appliqué.</strong></li>}
           
-          <li className="mt-2 text-[9px] leading-tight">
-            <span className="font-bold underline">Politique d'Annulation (sur acompte) :</span>
-            <ul className="list-disc ml-4 mt-1">
+          <li className="mt-1">
+            <span className="font-bold underline text-gray-700">Politique d'Annulation (1/3 Sous-total Séjour) :</span>
+            <ul className="list-disc ml-5 mt-1 space-y-1">
               <li><span className="font-semibold text-green-700">100% remboursé :</span> Annulation sous 24h (si séjour dans +14j).</li>
               <li><span className="font-semibold text-orange-600">50% remboursé :</span> Jusqu'à 7 jours avant l'arrivée.</li>
               <li><span className="font-semibold text-red-600">Non remboursable :</span> Moins de 7 jours avant l'arrivée.</li>
@@ -146,14 +144,14 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
         </ul>
         
         {data.hosts.length > 0 && (
-          <div className="mt-3 pt-2 border-t border-gray-200">
-            <span className="font-semibold">Vos hôtes sur place : </span>
+          <div className="mt-4 pt-2 border-t border-gray-200 text-gray-700">
+            <span className="font-semibold italic">Vos hôtes sur place : </span>
             {data.hosts.join(', ')}
           </div>
         )}
       </div>
 
-      {/* Footer Signature */}
+      {/* Signature */}
       <div className="mt-auto">
         <div className="flex justify-end mb-4 pr-4">
           <div className="text-center">
