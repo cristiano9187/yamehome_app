@@ -7,19 +7,31 @@ interface ReceiptPreviewProps {
 }
 
 const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
+  // 1. Calcul du nombre de nuits
   const nights = Math.max(0, Math.ceil((new Date(data.endDate).getTime() - new Date(data.startDate).getTime()) / (1000 * 3600 * 24)));
   const rates = getRateForApartment(data.apartmentName, nights);
 
-  // --- LOGIQUE DE CALCUL ---
-  const pricePerNight = data.isNegotiatedRate ? (data.negotiatedPricePerNight || 0) : rates.prix;
-  const totalLodging = data.isCustomRate ? data.customLodgingTotal : (pricePerNight * nights);
+  // 2. LOGIQUE DE CALCUL DU PRIX PAR NUIT (DYNAMIQUE)
+  let pricePerNight = rates.prix; // Par défaut, tarif standard
+
+  if (data.isNegotiatedRate) {
+    // Si Négocié : On prend la valeur saisie
+    pricePerNight = data.negotiatedPricePerNight || 0;
+  } else if (data.isCustomRate && nights > 0) {
+    // SI PLATEFORME : On divise le total par le nombre de nuits pour trouver le prix réel/nuit
+    pricePerNight = (data.customLodgingTotal || 0) / nights;
+  }
+
+  // 3. Calcul totaux
+  const totalLodging = data.isCustomRate ? (data.customLodgingTotal || 0) : (pricePerNight * nights);
   const grandTotal = totalLodging + rates.caution;
   
   const totalPaid = (data.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
   const remaining = grandTotal - totalPaid;
 
+  // Calcul remise (seulement si ce n'est pas un tarif plateforme)
   const standardPrice = rates.prix;
-  const discountPercent = standardPrice > 0 ? Math.round(((standardPrice - pricePerNight) / standardPrice) * 100) : 0;
+  const discountPercent = (!data.isCustomRate && standardPrice > 0) ? Math.round(((standardPrice - pricePerNight) / standardPrice) * 100) : 0;
 
   const emissionDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -75,7 +87,10 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
         <table className="w-full text-sm">
           <tbody>
             <tr className="border-t">
-              <td className="py-2">Prix par nuit {data.isNegotiatedRate && <span className="text-blue-600 text-xs">(Tarif Négocié)</span>}</td>
+              <td className="py-2">
+                Prix par nuit {data.isNegotiatedRate && <span className="text-blue-600 text-xs">(Négocié)</span>}
+                {data.isCustomRate && <span className="text-yellow-600 text-xs">(Ajusté Plateforme)</span>}
+              </td>
               <td className="py-2 text-right font-semibold">{formatCurrency(pricePerNight)}</td>
             </tr>
             {discountPercent > 0 && (
