@@ -4,7 +4,7 @@ import { ReceiptData } from './types';
 import ReceiptPreview from './components/ReceiptPreview';
 
 // --- CONFIGURATION SÉCURITÉ ---
-const ACCESS_PASSWORD = "YAME_PRO_2026"; 
+const ACCESS_PASSWORD = "Odza2026"; 
 
 function App() {
   // --- ÉTATS ---
@@ -237,7 +237,7 @@ function App() {
           </div>
           <div className="flex gap-2">
             <button onClick={saveToSheets} disabled={isSaving} className={`${saveStatus === 'success' ? 'bg-green-600' : 'bg-orange-500'} text-white font-bold py-2 px-3 rounded text-[10px] transition-all disabled:opacity-50 shadow`}>
-              {isSaving ? '...' : saveStatus === 'success' ? 'OK' : 'SAUVER'}
+              {isSaving ? '...' : saveStatus === 'success' ? 'OK' : 'SAUVEGARDER'}
             </button>
             <button onClick={handlePrint} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded text-[10px] shadow">IMPRIMER</button>
           </div>
