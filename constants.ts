@@ -1,58 +1,67 @@
 import { TarifMap } from './types';
 
-export const LOGO_BASE64 = "..."; // Garde ton logo actuel
+export const LOGO_BASE64 = "..."; // Garde ton logo actuel ici
 
 export const TARIFS: TarifMap = {
   'RIETI YAMEHOME - APPARTEMENT TERRACOTTA mode STUDIO': { 
       address: 'Odza entrée Fécafoot Yaoundé, Porte 201',
       units: ['rieti-terracotta'],
-      '1-6': { prix: 25000, caution: 10000 }, 
-      '7+': { prix: 23000, caution: 15000 }
+      '1-6': { prix: 25000, caution: 10000 }, '7+': { prix: 23000, caution: 15000 }
+  },
+  'RIETI YAMEHOME - APPARTEMENT TERRACOTTA': { 
+      address: 'Odza entrée Fécafoot Yaoundé, Porte 201',
+      units: ['rieti-terracotta'],
+      '1-6': { prix: 32000, caution: 10000 }, '7-29': { prix: 30000, caution: 15000 }, '30+': { prix: 26000, caution: 30000 }
   },
   'RIETI YAMEHOME - APPARTEMENT EMERAUDE mode STUDIO': { 
       address: 'Odza entrée Fécafoot Yaoundé, Porte 202',
       units: ['rieti-emeraude'],
-      '1-6': { prix: 25000, caution: 10000 }, 
-      '7+': { prix: 23000, caution: 15000 }
+      '1-6': { prix: 25000, caution: 10000 }, '7+': { prix: 23000, caution: 15000 }
+  },
+  'RIETI YAMEHOME - APPARTEMENT EMERAUDE': { 
+      address: 'Odza entrée Fécafoot Yaoundé, Porte 202',
+      units: ['rieti-emeraude'],
+      '1-6': { prix: 32000, caution: 10000 }, '7-29': { prix: 30000, caution: 15000 }, '30+': { prix: 26000, caution: 30000 }
   },
   'MODENA YAMEHOME - APPARTEMENT HAUT STANDING mode STUDIO': { 
       address: 'Odza Brigade, Yaoundé',
       units: ['modena-haut-standing'],
-      '1-6': { prix: 27000, caution: 10000 }, 
-      '7+': { prix: 24000, caution: 15000 }
+      '1-6': { prix: 27000, caution: 10000 }, '7+': { prix: 24000, caution: 15000 }
+  },
+  'MODENA YAMEHOME - APPARTEMENT HAUT STANDING': { 
+      address: 'Odza Brigade, Yaoundé',
+      units: ['modena-haut-standing'],
+      '1-6': { prix: 35000, caution: 10000 }, '7-29': { prix: 30000, caution: 15000 }, '30+': { prix: 27000, caution: 30000 }
   },
   'MATERA YAMEHOME - APPARTEMENT DELUXE mode STUDIO': { 
-      address: 'Odza borne 10, entrée Ministre Yaoundé, Porte 201',
+      address: 'Odza borne 10, Porte 201',
       units: ['matera-deluxe'],
-      '1-6': { prix: 30000, caution: 10000 }, 
-      '7+': { prix: 25000, caution: 15000 }
+      '1-6': { prix: 30000, caution: 10000 }, '7+': { prix: 25000, caution: 15000 }
+  },
+  'MATERA YAMEHOME - APPARTEMENT DELUXE': { 
+      address: 'Odza borne 10, Porte 201',
+      units: ['matera-deluxe'],
+      '1-6': { prix: 40000, caution: 10000 }, '7-29': { prix: 34000, caution: 15000 }, '30+': { prix: 30000, caution: 30000 }
   },
   'MATERA YAMEHOME - STUDIO AMERICAIN': {
-      address: 'Odza borne 10, entrée Ministre Yaoundé, Porte 103|203',
-      // AJOUT DES UNITÉS DOUBLES ICI
+      address: 'Odza borne 10, Porte 103|203',
       units: ['matera-studio', 'matera-studio-superior'], 
-      '1-6': { prix: 25000, caution: 5000 }, 
-      '7-29': { prix: 22500, caution: 10000 }, 
-      '30+': { prix: 20000, caution: 15000 }
+      '1-6': { prix: 25000, caution: 5000 }, '7-29': { prix: 22500, caution: 10000 }, '30+': { prix: 20000, caution: 15000 }
   },
   'MATERA YAMEHOME - CHAMBRE STANDARD': {
-      address: 'Odza borne 10, entrée Ministre Yaoundé,Porte 104 A|B',
+      address: 'Odza borne 10, Porte 104 A|B',
       units: ['matera-chambre-a', 'matera-chambre-b'],
-      '1-2': { prix: 15000, caution: 5000 }, 
-      '3+': { prix: 13000, caution: 10000 }
+      '1-2': { prix: 15000, caution: 5000 }, '3+': { prix: 13000, caution: 10000 }
   },
   'GALLAGHERS CITY - CHAMBRE STANDARD SIMPLE': { 
       address: 'Lieu-dit Troisième Mi-temps. Bangangté',
-      // AJOUT DES UNITÉS TRIPLES ICI
       units: ['bgt-standard-a', 'bgt-standard-b', 'bgt-standard-c'],
-      '1-6': { prix: 12000, caution: 5000 }, 
-      '7+': { prix: 10000, caution: 15000 }
+      '1-6': { prix: 12000, caution: 5000 }, '7+': { prix: 10000, caution: 15000 }
   },
   'GALLAGHERS CITY - CHAMBRE STANDARD + CUISINE': { 
     address: 'Lieu-dit Troisième Mi-temps. Bangangté',
     units: ['bgt-cuisine'],
-    '1-6': { prix: 15000, caution: 5000 }, 
-    '7+': { prix: 12000, caution: 15000 }
+    '1-6': { prix: 15000, caution: 5000 }, '7+': { prix: 12000, caution: 15000 }
   }
 };
 
