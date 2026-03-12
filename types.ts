@@ -5,6 +5,7 @@ export interface PricingRule {
 
 export interface ApartmentRate {
   address: string;
+  units?: string[]; // AJOUT : Liste des identifiants calendrier (ex: matera-studio-a)
   '1-2'?: PricingRule;
   '3+'?: PricingRule;
   '1-6'?: PricingRule;
@@ -16,16 +17,17 @@ export interface ApartmentRate {
 export interface TarifMap {
   [key: string]: ApartmentRate;
 }
-// --- AJOUTE CELLE-CI (Nouvelle structure pour un versement) ---
+
 export interface Payment {
   id: string;
   date: string;
   amount: number;
   method: string;
 }
-// --- MODIFIE CELLE-CI (Structure du reçu complet) ---
+
 export interface ReceiptData {
-  receiptId: string; // Ajoute cette ligne tout en haut de l'interface
+  receiptId: string;
+  calendarSlug?: string; // AJOUT : L'unité spécifique choisie pour le calendrier
   firstName: string;
   lastName: string;
   phone: string;
@@ -35,12 +37,9 @@ export interface ReceiptData {
   endDate: string;
   isCustomRate: boolean;
   customLodgingTotal: number;
-  isNegotiatedRate?: boolean;
-  negotiatedPricePerNight?: number;
-  
-  // ICI : On remplace paidAmount et paymentMethod par la liste
-  payments: Payment[]; 
-
+  isNegotiatedRate: boolean;
+  negotiatedPricePerNight: number;
+  payments: Payment[];
   signature: string;
   hosts: string[];
   electricityCharge: boolean;

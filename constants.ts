@@ -1,74 +1,58 @@
-import { TarifMap, PricingRule } from './types';
+import { TarifMap } from './types';
 
-// Replace this with your actual Logo Base64 string
-export const LOGO_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJ2SURBVHgB7Z2/TsMwEMZtEqvKxMIzAA8Qw8IJE29B4gVIjAydmHgDHgA8ADwDEysLCCtV/d05X9rYSe24SdvP90tW3T93vuT47LhJk8oY44wz5Rbj/B8fL5+X76/P5/On5/P5/eXz8vl0/XQ4Y0zZ5bQ9P91+3F9+3d98P91+3E8/H84YU3Y5bQ+X+8/hcv/5+ulwxpiyy2n7/3Q4Y0zZ5bT99/PhjDFlF0IgEA4hEAiHEAiEQwgEwiEEAuEQAoFwCIFAToSw1q7W2tVau3b74YwxZRdCIBwOIRCOh0A4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA4hEA45B8fL5+X76/P5/On5/P5/eXz8vl0/XQ4Y0zZ5bQ9P91+3F9+3d98P91+3E8/H84YU3Y5bQ+X+8/hcv/5+ulwxpiyy2n7/3Q4Y0zZ5bT99/PhjDFlF0IgEA4hEMgJ5h9j01oX/8E7OAAAAABJRU5ErkJggg==";
+export const LOGO_BASE64 = "..."; // Garde ton logo actuel
 
 export const TARIFS: TarifMap = {
   'RIETI YAMEHOME - APPARTEMENT TERRACOTTA mode STUDIO': { 
       address: 'Odza entrée Fécafoot Yaoundé, Porte 201',
+      units: ['rieti-terracotta'],
       '1-6': { prix: 25000, caution: 10000 }, 
       '7+': { prix: 23000, caution: 15000 }
   },
   'RIETI YAMEHOME - APPARTEMENT EMERAUDE mode STUDIO': { 
       address: 'Odza entrée Fécafoot Yaoundé, Porte 202',
+      units: ['rieti-emeraude'],
       '1-6': { prix: 25000, caution: 10000 }, 
       '7+': { prix: 23000, caution: 15000 }
   },
   'MODENA YAMEHOME - APPARTEMENT HAUT STANDING mode STUDIO': { 
       address: 'Odza Brigade, Yaoundé',
+      units: ['modena-haut-standing'],
       '1-6': { prix: 27000, caution: 10000 }, 
       '7+': { prix: 24000, caution: 15000 }
   },
   'MATERA YAMEHOME - APPARTEMENT DELUXE mode STUDIO': { 
       address: 'Odza borne 10, entrée Ministre Yaoundé, Porte 201',
+      units: ['matera-deluxe'],
       '1-6': { prix: 30000, caution: 10000 }, 
       '7+': { prix: 25000, caution: 15000 }
   },
   'MATERA YAMEHOME - STUDIO AMERICAIN': {
       address: 'Odza borne 10, entrée Ministre Yaoundé, Porte 103|203',
+      // AJOUT DES UNITÉS DOUBLES ICI
+      units: ['matera-studio', 'matera-studio-superior'], 
       '1-6': { prix: 25000, caution: 5000 }, 
       '7-29': { prix: 22500, caution: 10000 }, 
       '30+': { prix: 20000, caution: 15000 }
   },
   'MATERA YAMEHOME - CHAMBRE STANDARD': {
       address: 'Odza borne 10, entrée Ministre Yaoundé,Porte 104 A|B',
+      units: ['matera-chambre-a', 'matera-chambre-b'],
       '1-2': { prix: 15000, caution: 5000 }, 
       '3+': { prix: 13000, caution: 10000 }
   },
-  // Les adresses complètes sont ajoutées ici pour la recherche dans l'objet
-  'RIETI YAMEHOME - APPARTEMENT TERRACOTTA': { 
-      address: 'Odza entrée Fécafoot Yaoundé, Porte 201',
-      '1-6': { prix: 32000, caution: 10000 }, 
-      '7-29': { prix: 30000, caution: 15000 }, 
-      '30+': { prix: 26000, caution: 30000 }
-  },
-  'RIETI YAMEHOME - APPARTEMENT EMERAUDE': {
-      address: 'Odza entrée Fécafoot Yaoundé, Porte 202',
-      '1-6': { prix: 32000, caution: 10000 }, 
-      '7-29': { prix: 30000, caution: 15000 }, 
-      '30+': { prix: 26000, caution: 30000 }
-  },
-  'MODENA YAMEHOME - APPARTEMENT HAUT STANDING': {
-      address: 'Odza Brigade, Yaoundé',
-      '1-6': { prix: 35000, caution: 10000 }, 
-      '7-29': { prix: 30000, caution: 15000 }, 
-      '30+': { prix: 27000, caution: 30000 }
-  },
-  'MATERA YAMEHOME - APPARTEMENT DELUXE': {
-      address: 'Odza borne 10, entrée Ministre Yaoundé, Porte 201',
-      '1-6': { prix: 40000, caution: 10000 }, 
-      '7-29': { prix: 34000, caution: 15000 }, 
-      '30+': { prix: 30000, caution: 30000 }
-  },
-  'GALLAGHERS CITY - CHAMBRE STANDARD + CUISINE': { 
-      address: 'Lieu-dit Troisième Mi-temps. Bangangté',
-      '1-6': { prix: 15000, caution: 5000 }, 
-      '7+': { prix: 12000, caution: 15000 }
-  },
   'GALLAGHERS CITY - CHAMBRE STANDARD SIMPLE': { 
       address: 'Lieu-dit Troisième Mi-temps. Bangangté',
+      // AJOUT DES UNITÉS TRIPLES ICI
+      units: ['bgt-standard-a', 'bgt-standard-b', 'bgt-standard-c'],
       '1-6': { prix: 12000, caution: 5000 }, 
       '7+': { prix: 10000, caution: 15000 }
+  },
+  'GALLAGHERS CITY - CHAMBRE STANDARD + CUISINE': { 
+    address: 'Lieu-dit Troisième Mi-temps. Bangangté',
+    units: ['bgt-cuisine'],
+    '1-6': { prix: 15000, caution: 5000 }, 
+    '7+': { prix: 12000, caution: 15000 }
   }
 };
 
@@ -81,75 +65,27 @@ export const HOSTS = [
   { id: "pierre", label: "Pierre (+237 670 87 11 39)" },
   { id: "regine", label: "Regine (+237 692 79 22 26)" }
 ];
-/*
-export const getRateForApartment = (apartmentName: string, nights: number): { prix: number, caution: number, address: string } => {
-  const apt = TARIFS[apartmentName];
-  if (!apt) return { prix: 0, caution: 0, address: '' };
 
-  let rule: PricingRule | undefined;
-
-  if (apartmentName.includes('CHAMBRE STANDARD')) {
-      rule = nights >= 3 ? apt['3+'] : apt['1-2'];
-  } else if (apartmentName.includes('mode STUDIO')) {
-      rule = nights >= 7 ? apt['7+'] : apt['1-6'];
-  } else if (apartmentName.includes('STUDIO AMERICAIN')) {
-      if (nights >= 30) rule = apt['30+'];
-      else if (nights >= 7) rule = apt['7-29'];
-      else rule = apt['1-6'];
-  } else {
-      // Default logic for full apartments
-      if (nights >= 30) rule = apt['30+'];
-      else if (nights >= 7) rule = apt['7-29'];
-      else rule = apt['1-6'];
-  }
-
-  // Fallback if rule is undefined (shouldn't happen with correct data)
-  if (!rule) rule = { prix: 0, caution: 0 };
-
-  return { prix: rule.prix, caution: rule.caution, address: apt.address };
-};
-*/
 export const getRateForApartment = (apartmentName: string, nights: number): { prix: number; caution: number; address: string } => {
   const apartmentRules = TARIFS[apartmentName];
-
-  if (!apartmentRules) {
-    return { prix: 0, caution: 0, address: 'Adresse non trouvée' };
-  }
-
-  // On récupère les clés des tranches de prix (ex: '1-6', '7+', '1-2', '3+')
-  const rateKeys = Object.keys(apartmentRules).filter(k => k !== 'address');
-
+  if (!apartmentRules) return { prix: 0, caution: 0, address: 'Non trouvé' };
+  const rateKeys = Object.keys(apartmentRules).filter(k => k !== 'address' && k !== 'units');
   let bestMatchKey: string | undefined;
-
   for (const key of rateKeys) {
     if (key.includes('+')) {
       const minNights = parseInt(key.replace('+', ''), 10);
-      if (nights >= minNights) {
-        bestMatchKey = key;
-        // On ne s'arrête pas, on continue pour trouver la tranche la plus spécifique
-        // (ex: si on a '7+' et '30+', et nights=35, il faut prendre '30+')
-      }
+      if (nights >= minNights) bestMatchKey = key;
     } else if (key.includes('-')) {
       const [min, max] = key.split('-').map(n => parseInt(n, 10));
-      if (nights >= min && nights <= max) {
-        bestMatchKey = key;
-        break; // Une tranche min-max est un match exact, on peut s'arrêter
-      }
+      if (nights >= min && nights <= max) { bestMatchKey = key; break; }
     }
   }
-
   if (bestMatchKey) {
     const rate = apartmentRules[bestMatchKey as keyof typeof apartmentRules];
-    if (typeof rate === 'object' && 'prix' in rate && 'caution' in rate) {
-      return {
-        prix: rate.prix,
-        caution: rate.caution,
-        address: apartmentRules.address,
-      };
+    if (typeof rate === 'object' && 'prix' in rate) {
+      return { prix: rate.prix, caution: rate.caution, address: apartmentRules.address };
     }
   }
-  
-  // Si aucune règle n'a été trouvée
   return { prix: 0, caution: 0, address: apartmentRules.address };
 };
 
