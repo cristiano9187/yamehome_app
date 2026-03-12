@@ -1,6 +1,6 @@
 import { TarifMap } from './types';
 
-export const LOGO_BASE64 = "..."; // Ton logo ici
+export const LOGO_BASE64 = "...";
 
 export const TARIFS: TarifMap = {
   'RIETI YAMEHOME - APPARTEMENT TERRACOTTA mode STUDIO': { 
