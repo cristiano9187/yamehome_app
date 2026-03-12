@@ -29,6 +29,7 @@ function App() {
   });
 
   const [formData, setFormData] = useState<ReceiptData>(getInitialState());
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [searchId, setSearchId] = useState('');
@@ -36,27 +37,42 @@ function App() {
 
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfajRxCsKs0CLU4oiA6g5sirHUJHB3QdlJPeKOrjgFFDNQIeqbOxRlDqJ-VjAKZAuh2Q/exec';
 
-  const loadReceipt = useCallback(async (idToLoad: string, fromUrl: boolean) => {
+  // --- FONCTION DE CHARGEMENT ---
+  const loadReceipt = useCallback(async (idToLoad: string, autoMode: boolean) => {
     if (!idToLoad) return;
     setIsSaving(true);
     const formattedId = idToLoad.toUpperCase().startsWith('RC-') ? idToLoad.toUpperCase() : `RC-${idToLoad}`;
+    
     try {
       const response = await fetch(`${SCRIPT_URL}?id=${formattedId.trim()}`);
       const data = await response.json();
-      if (data.error) alert("Reçu non trouvé");
-      else { 
-        setFormData(data); 
-        setIsReadOnly(fromUrl); // Ne cache SAUVER que si on vient du calendrier
+      
+      if (data.error) {
+        alert("Reçu non trouvé");
+      } else {
+        setFormData(data);
+        if (autoMode) setIsReadOnly(true); // Bloque la sauvegarde si on vient du calendrier
+        else setIsReadOnly(false); // Permet la modif si on charge manuellement
       }
-    } catch (e) { alert("Erreur de connexion"); } finally { setIsSaving(false); }
+    } catch (e) {
+      console.error("Erreur chargement:", e);
+      alert("Erreur de connexion à la base de données");
+    } finally {
+      setIsSaving(false);
+    }
   }, []);
 
+  // --- EFFET : CHARGEMENT AUTO (AU DÉMARRAGE) ---
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const idFromUrl = params.get('id');
-    if (idFromUrl) { setSearchId(idFromUrl); loadReceipt(idFromUrl, true); }
+    if (idFromUrl) {
+      setSearchId(idFromUrl);
+      loadReceipt(idFromUrl, true);
+    }
   }, [loadReceipt]);
 
+  // --- EFFET : TITRE DU PDF ---
   useEffect(() => {
     const name = `${formData.firstName} ${formData.lastName}`.trim().replace(/\s+/g, '_');
     const apt = formData.apartmentName.split(' - ')[0].replace(/\s+/g, '_');
@@ -107,18 +123,17 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-900 text-white font-sans">
-      {/* GAUCHE : FORMULAIRE */}
       <div className="w-full md:w-1/3 p-6 overflow-y-auto h-auto md:h-screen print:hidden shadow-2xl">
         <div className="mb-6 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-blue-400 italic">YameHome</h1>
+          <h1 className="text-xl font-bold text-blue-400 italic font-mono">YAMEHOME</h1>
           <div className="flex gap-2">
-            <button onClick={() => window.location.href = window.location.origin + window.location.pathname} className="bg-gray-600 text-[9px] px-2 py-1 rounded font-bold uppercase">Quitter</button>
-            <button onClick={() => { setFormData(getInitialState()); setIsReadOnly(false); }} className="bg-red-500 text-[9px] px-2 py-1 rounded font-bold uppercase">Nouveau</button>
+            <button onClick={() => window.location.href = window.location.origin + window.location.pathname} className="bg-gray-600 text-[9px] px-2 py-1 rounded font-bold">QUITTER</button>
+            <button onClick={() => { setFormData(getInitialState()); setIsReadOnly(false); setSearchId(''); }} className="bg-red-500 text-[9px] px-2 py-1 rounded font-bold">NOUVEAU</button>
           </div>
         </div>
 
-        <div className="bg-blue-900/20 p-4 rounded border border-blue-500/30 mb-6">
-          <label className="text-blue-300 text-[10px] font-bold uppercase block mb-2 text-center">Recharger un reçu</label>
+        <div className="bg-blue-900/20 p-4 rounded border border-blue-500/30 mb-6 shadow-inner">
+          <label className="text-blue-300 text-[10px] font-bold uppercase block mb-2 text-center italic">Recharger un reçu</label>
           <div className="flex gap-2">
             <input type="text" placeholder="Ex: 815317" className="flex-1 bg-gray-800 rounded p-2 text-xs border border-blue-400/50 outline-none" value={searchId} onChange={(e) => setSearchId(e.target.value)} />
             <button onClick={() => loadReceipt(searchId, false)} className="bg-blue-600 text-white text-[10px] px-3 py-2 rounded font-bold uppercase">OK</button>
@@ -126,8 +141,8 @@ function App() {
         </div>
 
         <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-md">
-            <h3 className="text-gray-400 uppercase text-[10px] font-bold mb-3 border-b border-gray-700 pb-1 italic text-center">Client</h3>
+          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-lg">
+            <h3 className="text-gray-400 uppercase text-[10px] font-bold mb-3 border-b border-gray-700 pb-1 italic text-center">Détails Client</h3>
             <div className="grid grid-cols-2 gap-3 mb-3">
               <input type="text" name="firstName" value={formData.firstName} placeholder="Prénom" className="w-full bg-gray-700 rounded p-2 border border-gray-600 text-xs" onChange={handleChange} />
               <input type="text" name="lastName" value={formData.lastName} placeholder="Nom" className="w-full bg-gray-700 rounded p-2 border border-gray-600 text-xs" onChange={handleChange} />
@@ -135,7 +150,7 @@ function App() {
             <input type="tel" name="phone" value={formData.phone} placeholder="Téléphone" className="w-full bg-gray-700 rounded p-2 border border-gray-600 text-xs" onChange={handleChange} />
           </div>
 
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-md">
+          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-lg">
             <h3 className="text-gray-400 uppercase text-[10px] font-bold mb-3 border-b border-gray-700 pb-1 italic text-center">Réservation</h3>
             <select name="apartmentName" value={formData.apartmentName} className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 text-xs" onChange={handleChange}>
               <option value="">-- Choisir Appartement --</option>
@@ -156,8 +171,8 @@ function App() {
             </div>
           </div>
 
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-md">
-            <h3 className="text-gray-400 uppercase text-[10px] font-bold mb-3 border-b border-gray-700 pb-1 italic text-center">Versements</h3>
+          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-lg">
+            <h3 className="text-gray-400 uppercase text-[10px] font-bold mb-3 border-b border-gray-700 pb-1 italic text-center">Paiements</h3>
             <div className="flex gap-4 mb-3">
               <label className="flex items-center text-[10px] cursor-pointer"><input type="checkbox" name="isCustomRate" checked={formData.isCustomRate} onChange={handleChange} className="mr-1" /> Platef.</label>
               <label className="flex items-center text-[10px] cursor-pointer"><input type="checkbox" name="isNegotiatedRate" checked={formData.isNegotiatedRate} onChange={handleChange} className="mr-1" /> Négocié</label>
@@ -179,12 +194,12 @@ function App() {
             </div>
           </div>
           
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-md">
-            <select name="hosts" multiple value={formData.hosts} onChange={handleChange} className="w-full bg-gray-700 rounded p-2 text-[10px] h-24 mb-3 border border-gray-600">
+          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-lg">
+            <select name="hosts" multiple value={formData.hosts} onChange={handleChange} className="w-full bg-gray-700 rounded p-2 text-[10px] h-20 mb-3 border border-gray-600">
               {HOSTS.map(h => <option key={h.id} value={h.label}>{h.label}</option>)}
             </select>
-            <input type="text" name="signature" value={formData.signature} placeholder="Nom Signature" className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 text-xs" onChange={handleChange} />
-            <textarea name="observations" value={formData.observations} rows={2} placeholder="Note..." className="w-full bg-gray-700 rounded p-2 border border-gray-600 text-xs" onChange={handleChange}></textarea>
+            <input type="text" name="signature" value={formData.signature} placeholder="Nom Signature" className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 text-xs outline-none" onChange={handleChange} />
+            <textarea name="observations" value={formData.observations} rows={2} placeholder="Note..." className="w-full bg-gray-700 rounded p-2 border border-gray-600 text-xs outline-none" onChange={handleChange}></textarea>
           </div>
         </form>
       </div>
@@ -192,11 +207,11 @@ function App() {
       {/* DROITE : APERÇU */}
       <div className="w-full md:w-2/3 bg-gray-200 p-2 md:p-8 flex flex-col items-start md:items-center overflow-y-auto h-auto md:h-screen preview-container">
         <div className="mb-4 no-print flex w-full max-w-[210mm] justify-between items-center print:hidden px-2">
-          <div className="flex flex-col"><h2 className="text-gray-600 font-bold text-sm">Aperçu direct</h2><span className="text-[10px] text-gray-400 font-mono uppercase font-bold">{formData.receiptId}</span></div>
+          <div className="flex flex-col"><h2 className="text-gray-600 font-bold text-sm uppercase">Aperçu direct</h2><span className="text-[10px] text-gray-400 font-mono font-bold">{formData.receiptId}</span></div>
           <div className="flex gap-2">
             {!isReadOnly && (
               <button onClick={saveToSheets} disabled={isSaving} className={`${saveStatus === 'success' ? 'bg-green-600' : 'bg-orange-500'} text-white font-bold py-2 px-3 rounded text-[10px] shadow uppercase transition-all`}>
-                {isSaving ? '...' : saveStatus === 'success' ? 'OK' : 'Sauver'}
+                {isSaving ? '...' : saveStatus === 'success' ? 'OK' : 'Sauvegarder'}
               </button>
             )}
             <button onClick={() => window.print()} className="bg-blue-600 text-white font-bold py-2 px-3 rounded text-[10px] shadow uppercase">PDF</button>
