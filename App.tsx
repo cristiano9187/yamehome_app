@@ -29,7 +29,6 @@ function App() {
     if (!idToLoad) return;
     setIsSaving(true);
     if (setReadOnly) setIsReadOnly(true);
-
     const formattedId = idToLoad.toUpperCase().startsWith('RC-') ? idToLoad.toUpperCase() : `RC-${idToLoad}`;
     try {
       const response = await fetch(`${SCRIPT_URL}?id=${formattedId.trim()}`);
@@ -42,19 +41,17 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const idFromUrl = params.get('id');
-    if (idFromUrl) {
-      loadReceipt(idFromUrl, true);
-    }
+    if (idFromUrl) loadReceipt(idFromUrl, true);
   }, [loadReceipt]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    if (isReadOnly) return; // Sécurité supplémentaire
+    if (isReadOnly) return;
     const { name, value, type } = e.target;
     if (type === 'checkbox') setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
     else if (name === 'hosts') {
       const selected = Array.from((e.target as HTMLSelectElement).selectedOptions).map(opt => opt.text);
       setFormData(prev => ({ ...prev, hosts: selected }));
-    } else setFormData(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) || 0 : value }));
+    } else setFormData(prev => ({ ...prev, [name]: type === 'number' ? (parseFloat(value) || 0) : value }));
   };
 
   const saveToSheets = async () => {
@@ -91,7 +88,7 @@ function App() {
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-900 text-white font-sans text-xs">
       <div className="w-full md:w-1/3 p-6 overflow-y-auto h-auto md:h-screen print:hidden shadow-2xl border-r border-gray-800">
         <div className="mb-6 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-blue-400 italic font-mono uppercase tracking-tighter">YAMEHOME</h1>
+          <h1 className="text-xl font-bold text-blue-400 font-mono italic">YAMEHOME</h1>
           <div className="flex gap-2">
             <button onClick={() => window.location.href = window.location.origin + window.location.pathname} className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded font-bold uppercase transition-all">Quitter</button>
             <button onClick={() => { setFormData(getInitialState()); setIsReadOnly(false); setSearchId(''); }} className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded font-bold uppercase transition-all shadow-lg">Nouveau</button>
@@ -106,7 +103,6 @@ function App() {
         </div>
 
         <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-          {/* CLIENT */}
           <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-sm">
             <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-gray-400">Client</h3>
             <div className="grid grid-cols-2 gap-3 mb-2">
@@ -116,44 +112,37 @@ function App() {
             <input disabled={isReadOnly} type="tel" name="phone" value={formData.phone} placeholder="Téléphone" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-70" onChange={handleChange} />
           </div>
 
-          {/* RESERVATION */}
           <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-sm">
             <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-gray-400">Réservation</h3>
-            <select disabled={isReadOnly} name="apartmentName" value={formData.apartmentName} className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 outline-none disabled:opacity-70" onChange={handleChange}>
+            <select disabled={isReadOnly} name="apartmentName" value={formData.apartmentName} className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 text-xs outline-none disabled:opacity-70" onChange={handleChange}>
               <option value="">-- Choisir Appartement --</option>
               {Object.keys(TARIFS).map(key => <option key={key} value={key}>{key}</option>)}
             </select>
             {TARIFS[formData.apartmentName]?.units && TARIFS[formData.apartmentName].units!.length > 1 && (
-              <div className="mb-3 p-2 bg-blue-900/30 border border-blue-500/50 rounded">
-                <label className="text-[10px] font-bold block mb-1">UNITÉ PHYSIQUE</label>
+              <div className="mb-3 p-2 bg-blue-900/30 border border-blue-500 rounded">
                 <select disabled={isReadOnly} name="calendarSlug" value={formData.calendarSlug} onChange={handleChange} className="w-full bg-gray-700 p-1.5 rounded border border-blue-400 outline-none disabled:opacity-70">
-                  <option value="">-- Préciser --</option>
+                  <option value="">-- Préciser l'unité --</option>
                   {TARIFS[formData.apartmentName].units!.map(u => <option key={u} value={u}>{u}</option>)}
                 </select>
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col"><label className="text-[9px] text-gray-500 mb-1">Arrivée</label><input disabled={isReadOnly} type="date" name="startDate" value={formData.startDate} className="bg-gray-700 rounded p-2 border border-gray-600 disabled:opacity-70" onChange={handleChange} /></div>
-              <div className="flex flex-col"><label className="text-[9px] text-gray-500 mb-1">Départ</label><input disabled={isReadOnly} type="date" name="endDate" value={formData.endDate} className="bg-gray-700 rounded p-2 border border-gray-600 disabled:opacity-70" onChange={handleChange} /></div>
+              <input disabled={isReadOnly} type="date" name="startDate" value={formData.startDate} className="bg-gray-700 rounded p-2 border border-gray-600 disabled:opacity-70" onChange={handleChange} />
+              <input disabled={isReadOnly} type="date" name="endDate" value={formData.endDate} className="bg-gray-700 rounded p-2 border border-gray-600 disabled:opacity-70" onChange={handleChange} />
             </div>
           </div>
 
-          {/* PAIEMENTS */}
           <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-sm">
             <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-gray-400">Tarification</h3>
             <div className="flex gap-4 mb-3">
               <label className="flex items-center"><input disabled={isReadOnly} type="checkbox" name="isCustomRate" checked={formData.isCustomRate} onChange={handleChange} className="mr-1" /> Plateforme</label>
               <label className="flex items-center"><input disabled={isReadOnly} type="checkbox" name="isNegotiatedRate" checked={formData.isNegotiatedRate} onChange={handleChange} className="mr-1" /> Négocié</label>
             </div>
-            {/* FIX ICI : Ajout du || '' pour masquer le 0 par défaut */}
             {formData.isCustomRate && <input disabled={isReadOnly} type="number" name="customLodgingTotal" value={formData.customLodgingTotal || ''} className="w-full bg-gray-700 rounded p-2 border border-yellow-600 text-yellow-300 mb-3 outline-none disabled:opacity-70" placeholder="Total séjour" onChange={handleChange} />}
             {formData.isNegotiatedRate && <input disabled={isReadOnly} type="number" name="negotiatedPricePerNight" value={formData.negotiatedPricePerNight || ''} className="w-full bg-gray-700 rounded p-2 border border-blue-500 text-blue-300 mb-3 outline-none disabled:opacity-70" placeholder="Prix nuit" onChange={handleChange} />}
             
             <div className="mt-4 border-t border-gray-700 pt-3">
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-bold text-gray-400 uppercase">Historique</span>
-                {!isReadOnly && <button type="button" onClick={() => setFormData(prev => ({...prev, payments: [...prev.payments, { id: Date.now().toString(), date: new Date().toISOString().split('T')[0], amount: 0, method: 'Espèces' }]}))} className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase shadow">+ Add</button>}
-              </div>
+              <div className="flex justify-between items-center mb-2"><span className="font-bold text-gray-400 uppercase">Versements</span><button type="button" disabled={isReadOnly} onClick={() => setFormData(prev => ({...prev, payments: [...prev.payments, { id: Date.now().toString(), date: new Date().toISOString().split('T')[0], amount: 0, method: 'Espèces' }]}))} className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase shadow">+ Add</button></div>
               {formData.payments.map((p) => (
                 <div key={p.id} className="bg-gray-700/40 p-2 rounded mb-2 border border-gray-600 text-[10px] relative">
                    {!isReadOnly && formData.payments.length > 1 && <button onClick={() => setFormData(prev => ({...prev, payments: prev.payments.filter(x => x.id !== p.id)}))} className="absolute top-1 right-1 text-red-400 font-bold px-1 z-10">✕</button>}
@@ -167,12 +156,12 @@ function App() {
             </div>
           </div>
           
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-lg">
-            <select disabled={isReadOnly} name="hosts" multiple value={formData.hosts} onChange={handleChange} className="w-full bg-gray-700 rounded p-2 text-[10px] h-20 mb-3 border border-gray-600 outline-none disabled:opacity-70">
+          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-lg text-[10px]">
+            <select disabled={isReadOnly} name="hosts" multiple value={formData.hosts} onChange={handleChange} className="w-full bg-gray-700 rounded p-2 h-20 mb-3 border border-gray-600 text-gray-300">
               {HOSTS.map(h => <option key={h.id} value={h.label}>{h.label}</option>)}
             </select>
             <input disabled={isReadOnly} type="text" name="signature" value={formData.signature} placeholder="Signature" className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 outline-none shadow-inner disabled:opacity-70" onChange={handleChange} />
-            <textarea disabled={isReadOnly} name="observations" value={formData.observations} rows={2} placeholder="Note..." className="w-full bg-gray-700 rounded p-2 border border-gray-600 text-xs outline-none disabled:opacity-70" onChange={handleChange}></textarea>
+            <textarea disabled={isReadOnly} name="observations" value={formData.observations} rows={2} placeholder="Note..." className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-70" onChange={handleChange}></textarea>
           </div>
         </form>
       </div>
@@ -182,11 +171,11 @@ function App() {
           <div className="flex flex-col"><h2 className="text-gray-600 font-bold text-sm uppercase">Détails Reçu</h2><span className="text-[10px] text-gray-400 font-mono font-bold uppercase">{formData.receiptId}</span></div>
           <div className="flex gap-2">
             {!isReadOnly && (
-              <button onClick={saveToSheets} disabled={isSaving} className={`${saveStatus === 'success' ? 'bg-green-600' : 'bg-orange-600'} text-white font-bold py-2 px-3 rounded shadow-md uppercase transition-all hover:scale-105 active:scale-95`}>
+              <button onClick={saveToSheets} disabled={isSaving} className={`${saveStatus === 'success' ? 'bg-green-600' : 'bg-orange-600'} text-white font-bold py-2 px-3 rounded shadow uppercase transition-all`}>
                 {isSaving ? '...' : saveStatus === 'success' ? 'OK' : 'SAUVEGARDER'}
               </button>
             )}
-            <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded shadow-md uppercase transition-all">PDF</button>
+            <button onClick={() => window.print()} className="bg-blue-600 text-white font-bold py-2 px-3 rounded shadow uppercase">PDF</button>
           </div>
         </div>
         <ReceiptPreview data={formData} />
