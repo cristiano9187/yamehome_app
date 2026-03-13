@@ -21,21 +21,21 @@ function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [searchId, setSearchId] = useState('');
-  const [isReadOnly, setIsReadOnly] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(new URLSearchParams(window.location.search).has('id'));
 
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfajRxCsKs0CLU4oiA6g5sirHUJHB3QdlJPeKOrjgFFDNQIeqbOxRlDqJ-VjAKZAuh2Q/exec';
 
   const loadReceipt = useCallback(async (idToLoad: string, setReadOnly: boolean) => {
     if (!idToLoad) return;
     setIsSaving(true);
-    if (setReadOnly) setIsReadOnly(true);
+    setIsReadOnly(setReadOnly);
     const formattedId = idToLoad.toUpperCase().startsWith('RC-') ? idToLoad.toUpperCase() : `RC-${idToLoad}`;
     try {
       const response = await fetch(`${SCRIPT_URL}?id=${formattedId.trim()}`);
       const data = await response.json();
-      if (data.error) alert("Reçu non trouvé");
+      if (data.error) { alert("Non trouvé"); setIsReadOnly(false); }
       else setFormData(data);
-    } catch (e) { alert("Erreur réseau"); } finally { setIsSaving(false); }
+    } catch (e) { alert("Erreur réseau"); setIsReadOnly(false); } finally { setIsSaving(false); }
   }, []);
 
   useEffect(() => {
@@ -86,82 +86,83 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-900 text-white font-sans text-xs">
-      <div className="w-full md:w-1/3 p-6 overflow-y-auto h-auto md:h-screen print:hidden shadow-2xl border-r border-gray-800">
+      <div className="w-full md:w-1/3 p-6 overflow-y-auto h-auto md:h-screen print:hidden shadow-2xl">
         <div className="mb-6 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-blue-400 font-mono italic">YAMEHOME</h1>
+          <h1 className="text-xl font-bold text-blue-400 italic font-mono uppercase">YAMEHOME</h1>
           <div className="flex gap-2">
-            <button onClick={() => window.location.href = window.location.origin + window.location.pathname} className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded font-bold uppercase transition-all">Quitter</button>
-            <button onClick={() => { setFormData(getInitialState()); setIsReadOnly(false); setSearchId(''); }} className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded font-bold uppercase transition-all shadow-lg">Nouveau</button>
+            <button onClick={() => window.location.href = window.location.origin + window.location.pathname} className="bg-gray-600 px-2 py-1 rounded font-bold uppercase">Quitter</button>
+            <button onClick={() => { setFormData(getInitialState()); setIsReadOnly(false); setSearchId(''); }} className="bg-red-500 px-2 py-1 rounded font-bold uppercase">Nouveau</button>
           </div>
         </div>
 
         <div className="bg-blue-900/20 p-4 rounded border border-blue-500/30 mb-6">
           <div className="flex gap-2">
             <input type="text" placeholder="Rechercher ID..." className="flex-1 bg-gray-800 rounded p-2 border border-blue-400/50 outline-none" value={searchId} onChange={(e) => setSearchId(e.target.value)} />
-            <button onClick={() => loadReceipt(searchId, false)} className="bg-blue-600 px-3 py-2 rounded font-bold uppercase hover:bg-blue-700">OK</button>
+            <button onClick={() => loadReceipt(searchId, false)} className="bg-blue-600 px-3 py-2 rounded font-bold uppercase">OK</button>
           </div>
         </div>
 
         <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-sm">
-            <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-gray-400">Client</h3>
+          <div className="bg-gray-800 p-4 rounded border border-gray-700">
+            <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-center">Client</h3>
             <div className="grid grid-cols-2 gap-3 mb-2">
-              <input disabled={isReadOnly} type="text" name="firstName" value={formData.firstName} placeholder="Prénom" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-70" onChange={handleChange} />
-              <input disabled={isReadOnly} type="text" name="lastName" value={formData.lastName} placeholder="Nom" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-70" onChange={handleChange} />
+              <input disabled={isReadOnly} type="text" name="firstName" value={formData.firstName} placeholder="Prénom" className="w-full bg-gray-700 rounded p-2 border border-gray-600" onChange={handleChange} />
+              <input disabled={isReadOnly} type="text" name="lastName" value={formData.lastName} placeholder="Nom" className="w-full bg-gray-700 rounded p-2 border border-gray-600" onChange={handleChange} />
             </div>
-            <input disabled={isReadOnly} type="tel" name="phone" value={formData.phone} placeholder="Téléphone" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-70" onChange={handleChange} />
+            <input disabled={isReadOnly} type="tel" name="phone" value={formData.phone} placeholder="Téléphone" className="w-full bg-gray-700 rounded p-2 border border-gray-600" onChange={handleChange} />
           </div>
 
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-sm">
-            <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-gray-400">Réservation</h3>
-            <select disabled={isReadOnly} name="apartmentName" value={formData.apartmentName} className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 text-xs outline-none disabled:opacity-70" onChange={handleChange}>
+          <div className="bg-gray-800 p-4 rounded border border-gray-700">
+            <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-center">Réservation</h3>
+            <select disabled={isReadOnly} name="apartmentName" value={formData.apartmentName} className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3" onChange={handleChange}>
               <option value="">-- Choisir Appartement --</option>
               {Object.keys(TARIFS).map(key => <option key={key} value={key}>{key}</option>)}
             </select>
             {TARIFS[formData.apartmentName]?.units && TARIFS[formData.apartmentName].units!.length > 1 && (
               <div className="mb-3 p-2 bg-blue-900/30 border border-blue-500 rounded">
-                <select disabled={isReadOnly} name="calendarSlug" value={formData.calendarSlug} onChange={handleChange} className="w-full bg-gray-700 p-1.5 rounded border border-blue-400 outline-none disabled:opacity-70">
+                <select disabled={isReadOnly} name="calendarSlug" value={formData.calendarSlug} onChange={handleChange} className="w-full bg-gray-700 p-1.5 rounded border border-blue-400">
                   <option value="">-- Préciser l'unité --</option>
                   {TARIFS[formData.apartmentName].units!.map(u => <option key={u} value={u}>{u}</option>)}
                 </select>
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
-              <input disabled={isReadOnly} type="date" name="startDate" value={formData.startDate} className="bg-gray-700 rounded p-2 border border-gray-600 disabled:opacity-70" onChange={handleChange} />
-              <input disabled={isReadOnly} type="date" name="endDate" value={formData.endDate} className="bg-gray-700 rounded p-2 border border-gray-600 disabled:opacity-70" onChange={handleChange} />
+              <input disabled={isReadOnly} type="date" name="startDate" value={formData.startDate} className="bg-gray-700 rounded p-2 border border-gray-600" onChange={handleChange} />
+              <input disabled={isReadOnly} type="date" name="endDate" value={formData.endDate} className="bg-gray-700 rounded p-2 border border-gray-600" onChange={handleChange} />
             </div>
           </div>
 
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-sm">
-            <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-gray-400">Tarification</h3>
+          <div className="bg-gray-800 p-4 rounded border border-gray-700">
+            <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-center">Tarification</h3>
             <div className="flex gap-4 mb-3">
               <label className="flex items-center"><input disabled={isReadOnly} type="checkbox" name="isCustomRate" checked={formData.isCustomRate} onChange={handleChange} className="mr-1" /> Plateforme</label>
               <label className="flex items-center"><input disabled={isReadOnly} type="checkbox" name="isNegotiatedRate" checked={formData.isNegotiatedRate} onChange={handleChange} className="mr-1" /> Négocié</label>
             </div>
-            {formData.isCustomRate && <input disabled={isReadOnly} type="number" name="customLodgingTotal" value={formData.customLodgingTotal || ''} className="w-full bg-gray-700 rounded p-2 border border-yellow-600 text-yellow-300 mb-3 outline-none disabled:opacity-70" placeholder="Total séjour" onChange={handleChange} />}
-            {formData.isNegotiatedRate && <input disabled={isReadOnly} type="number" name="negotiatedPricePerNight" value={formData.negotiatedPricePerNight || ''} className="w-full bg-gray-700 rounded p-2 border border-blue-500 text-blue-300 mb-3 outline-none disabled:opacity-70" placeholder="Prix nuit" onChange={handleChange} />}
+            {/* FIX DU CHIFFRE 0 ICI */}
+            {formData.isCustomRate && <input disabled={isReadOnly} type="number" name="customLodgingTotal" value={formData.customLodgingTotal || ''} className="w-full bg-gray-700 rounded p-2 border border-yellow-600 text-yellow-300 mb-3" placeholder="Montant plateforme" onChange={handleChange} />}
+            {formData.isNegotiatedRate && <input disabled={isReadOnly} type="number" name="negotiatedPricePerNight" value={formData.negotiatedPricePerNight || ''} className="w-full bg-gray-700 rounded p-2 border border-blue-500 text-blue-300 mb-3" placeholder="Prix nuit négocié" onChange={handleChange} />}
             
             <div className="mt-4 border-t border-gray-700 pt-3">
-              <div className="flex justify-between items-center mb-2"><span className="font-bold text-gray-400 uppercase">Versements</span><button type="button" disabled={isReadOnly} onClick={() => setFormData(prev => ({...prev, payments: [...prev.payments, { id: Date.now().toString(), date: new Date().toISOString().split('T')[0], amount: 0, method: 'Espèces' }]}))} className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase shadow">+ Add</button></div>
+              <div className="flex justify-between items-center mb-2"><span className="font-bold text-gray-400 uppercase">Versements</span>{!isReadOnly && <button type="button" onClick={() => setFormData(prev => ({...prev, payments: [...prev.payments, { id: Date.now().toString(), date: new Date().toISOString().split('T')[0], amount: 0, method: 'Espèces' }]}))} className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase shadow">+ Add</button>}</div>
               {formData.payments.map((p) => (
-                <div key={p.id} className="bg-gray-700/40 p-2 rounded mb-2 border border-gray-600 text-[10px] relative">
+                <div key={p.id} className="bg-gray-700/40 p-2 rounded mb-2 border border-gray-600 relative">
                    {!isReadOnly && formData.payments.length > 1 && <button onClick={() => setFormData(prev => ({...prev, payments: prev.payments.filter(x => x.id !== p.id)}))} className="absolute top-1 right-1 text-red-400 font-bold px-1 z-10">✕</button>}
-                   <input disabled={isReadOnly} type="date" value={p.date} onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, date: e.target.value} : x)}))} className="bg-gray-800 rounded p-1 mb-1 w-full border-none outline-none disabled:opacity-70" />
+                   <input disabled={isReadOnly} type="date" value={p.date} onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, date: e.target.value} : x)}))} className="bg-gray-800 rounded p-1 mb-1 w-full border-none outline-none" />
                    <div className="flex gap-2">
-                    <input disabled={isReadOnly} type="number" value={p.amount || ''} placeholder="Montant" onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, amount: parseFloat(e.target.value) || 0} : x)}))} className="bg-gray-800 rounded p-1 flex-1 font-bold text-green-400 outline-none border-none disabled:opacity-70" />
-                    <select disabled={isReadOnly} value={p.method} onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, method: e.target.value} : x)}))} className="bg-gray-800 rounded p-1 flex-1 outline-none border-none disabled:opacity-70">{PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}</select>
+                    <input disabled={isReadOnly} type="number" value={p.amount || ''} placeholder="Montant" onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, amount: parseFloat(e.target.value) || 0} : x)}))} className="bg-gray-800 rounded p-1 flex-1 font-bold text-green-400 outline-none border-none" />
+                    <select disabled={isReadOnly} value={p.method} onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, method: e.target.value} : x)}))} className="bg-gray-800 rounded p-1 flex-1 outline-none border-none">{PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}</select>
                    </div>
                 </div>
               ))}
             </div>
           </div>
           
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-lg text-[10px]">
-            <select disabled={isReadOnly} name="hosts" multiple value={formData.hosts} onChange={handleChange} className="w-full bg-gray-700 rounded p-2 h-20 mb-3 border border-gray-600 text-gray-300">
+          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-lg">
+            <select disabled={isReadOnly} name="hosts" multiple value={formData.hosts} onChange={handleChange} className="w-full bg-gray-700 rounded p-2 text-[10px] h-20 mb-3 border border-gray-600 text-gray-300">
               {HOSTS.map(h => <option key={h.id} value={h.label}>{h.label}</option>)}
             </select>
-            <input disabled={isReadOnly} type="text" name="signature" value={formData.signature} placeholder="Signature" className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 outline-none shadow-inner disabled:opacity-70" onChange={handleChange} />
-            <textarea disabled={isReadOnly} name="observations" value={formData.observations} rows={2} placeholder="Note..." className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-70" onChange={handleChange}></textarea>
+            <input disabled={isReadOnly} type="text" name="signature" value={formData.signature} placeholder="Signature" className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 outline-none" onChange={handleChange} />
+            <textarea disabled={isReadOnly} name="observations" value={formData.observations} rows={2} placeholder="Note..." className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none" onChange={handleChange}></textarea>
           </div>
         </form>
       </div>
