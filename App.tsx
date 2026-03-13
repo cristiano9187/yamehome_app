@@ -145,8 +145,9 @@ function App() {
               <label className="flex items-center"><input disabled={isReadOnly} type="checkbox" name="isCustomRate" checked={formData.isCustomRate} onChange={handleChange} className="mr-1" /> Plateforme</label>
               <label className="flex items-center"><input disabled={isReadOnly} type="checkbox" name="isNegotiatedRate" checked={formData.isNegotiatedRate} onChange={handleChange} className="mr-1" /> Négocié</label>
             </div>
-            {formData.isCustomRate && <input disabled={isReadOnly} type="number" name="customLodgingTotal" value={formData.customLodgingTotal} className="w-full bg-gray-700 rounded p-2 border border-yellow-600 text-yellow-300 mb-3 outline-none disabled:opacity-70" placeholder="Total séjour" onChange={handleChange} />}
-            {formData.isNegotiatedRate && <input disabled={isReadOnly} type="number" name="negotiatedPricePerNight" value={formData.negotiatedPricePerNight} className="w-full bg-gray-700 rounded p-2 border border-blue-500 text-blue-300 mb-3 outline-none disabled:opacity-70" placeholder="Prix nuit" onChange={handleChange} />}
+            {/* FIX ICI : Ajout du || '' pour masquer le 0 par défaut */}
+            {formData.isCustomRate && <input disabled={isReadOnly} type="number" name="customLodgingTotal" value={formData.customLodgingTotal || ''} className="w-full bg-gray-700 rounded p-2 border border-yellow-600 text-yellow-300 mb-3 outline-none disabled:opacity-70" placeholder="Total séjour" onChange={handleChange} />}
+            {formData.isNegotiatedRate && <input disabled={isReadOnly} type="number" name="negotiatedPricePerNight" value={formData.negotiatedPricePerNight || ''} className="w-full bg-gray-700 rounded p-2 border border-blue-500 text-blue-300 mb-3 outline-none disabled:opacity-70" placeholder="Prix nuit" onChange={handleChange} />}
             
             <div className="mt-4 border-t border-gray-700 pt-3">
               <div className="flex justify-between items-center mb-2">
