@@ -33,7 +33,7 @@ function App() {
     try {
       const response = await fetch(`${SCRIPT_URL}?id=${formattedId.trim()}`);
       const data = await response.json();
-      if (data.error) { alert("Reçu non trouvé"); setIsReadOnly(false); }
+      if (data.error) { alert("Non trouvé"); setIsReadOnly(false); }
       else setFormData(data);
     } catch (e) { alert("Erreur réseau"); setIsReadOnly(false); } finally { setIsSaving(false); }
   }, []);
@@ -86,9 +86,8 @@ function App() {
     } catch (error) { setSaveStatus('error'); } finally { setIsSaving(false); }
   };
 
-  // --- FONCTION : ANNULATION LOGIQUE (SOFT DELETE) ---
   const softDeleteBooking = async () => {
-    if (window.confirm("❗ ANNULATION : Voulez-vous retirer cette réservation du calendrier ? Les données resteront enregistrées mais seront marquées 'ANNULE'.")) {
+    if (window.confirm("❗ ANNULATION : Voulez-vous retirer cette réservation du calendrier ?")) {
       setIsSaving(true);
       try {
         await fetch(SCRIPT_URL, {
@@ -96,7 +95,7 @@ function App() {
           mode: 'no-cors',
           body: JSON.stringify({ action: "SOFT_DELETE", receiptId: formData.receiptId })
         });
-        alert("Réservation retirée du calendrier.");
+        alert("Réservation retirée.");
         setFormData(getInitialState());
         setIsReadOnly(false);
         setSearchId('');
@@ -115,7 +114,7 @@ function App() {
           </div>
         </div>
 
-        <div className="bg-blue-900/20 p-4 rounded border border-blue-500/30 mb-6 text-center shadow-inner">
+        <div className="bg-blue-900/20 p-4 rounded border border-blue-500/30 mb-6">
           <div className="flex gap-2">
             <input type="text" placeholder="Rechercher ID..." className="flex-1 bg-gray-800 rounded p-2 border border-blue-400/50 outline-none" value={searchId} onChange={(e) => setSearchId(e.target.value)} />
             <button onClick={() => loadReceipt(searchId, false)} className="bg-blue-600 px-3 py-2 rounded font-bold uppercase hover:bg-blue-700">OK</button>
@@ -123,33 +122,32 @@ function App() {
         </div>
 
         <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-          <div className="bg-gray-800 p-4 rounded border border-gray-700">
+          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-sm">
             <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-center text-gray-400">Client</h3>
             <div className="grid grid-cols-2 gap-3 mb-2">
-              <input disabled={isReadOnly} type="text" name="firstName" value={formData.firstName} placeholder="Prénom" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-50" onChange={handleChange} />
-              <input disabled={isReadOnly} type="text" name="lastName" value={formData.lastName} placeholder="Nom" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-50" onChange={handleChange} />
+              <input disabled={isReadOnly} type="text" name="firstName" value={formData.firstName} placeholder="Prénom" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-70" onChange={handleChange} />
+              <input disabled={isReadOnly} type="text" name="lastName" value={formData.lastName} placeholder="Nom" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-70" onChange={handleChange} />
             </div>
-            <input disabled={isReadOnly} type="tel" name="phone" value={formData.phone} placeholder="Téléphone" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-50" onChange={handleChange} />
+            <input disabled={isReadOnly} type="tel" name="phone" value={formData.phone} placeholder="Téléphone" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-70" onChange={handleChange} />
           </div>
 
           <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-sm">
             <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-center text-gray-400">Réservation</h3>
-            <select disabled={isReadOnly} name="apartmentName" value={formData.apartmentName} className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 text-xs outline-none disabled:opacity-50" onChange={handleChange}>
+            <select disabled={isReadOnly} name="apartmentName" value={formData.apartmentName} className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 text-xs outline-none disabled:opacity-70" onChange={handleChange}>
               <option value="">-- Choisir Appartement --</option>
               {Object.keys(TARIFS).map(key => <option key={key} value={key}>{key}</option>)}
             </select>
             {TARIFS[formData.apartmentName]?.units && TARIFS[formData.apartmentName].units!.length > 1 && (
-              <div className="mb-3 p-2 bg-blue-900/30 border border-blue-500/50 rounded text-center">
-                <label className="text-[10px] font-bold block mb-1">UNITÉ PHYSIQUE</label>
-                <select disabled={isReadOnly} name="calendarSlug" value={formData.calendarSlug} onChange={handleChange} className="w-full bg-gray-700 p-1.5 rounded border border-blue-400 outline-none disabled:opacity-50">
-                  <option value="">-- Préciser --</option>
+              <div className="mb-3 p-2 bg-blue-900/30 border border-blue-500/50 rounded">
+                <select disabled={isReadOnly} name="calendarSlug" value={formData.calendarSlug} onChange={handleChange} className="w-full bg-gray-700 p-1.5 rounded border border-blue-400 outline-none disabled:opacity-70">
+                  <option value="">-- Préciser l'unité --</option>
                   {TARIFS[formData.apartmentName].units!.map(u => <option key={u} value={u}>{u}</option>)}
                 </select>
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
-              <input disabled={isReadOnly} type="date" name="startDate" value={formData.startDate} className="bg-gray-700 rounded p-2 border border-gray-600 disabled:opacity-50" onChange={handleChange} />
-              <input disabled={isReadOnly} type="date" name="endDate" value={formData.endDate} className="bg-gray-700 rounded p-2 border border-gray-600 disabled:opacity-50" onChange={handleChange} />
+              <input disabled={isReadOnly} type="date" name="startDate" value={formData.startDate} className="bg-gray-700 rounded p-2 border border-gray-600 disabled:opacity-70" onChange={handleChange} />
+              <input disabled={isReadOnly} type="date" name="endDate" value={formData.endDate} className="bg-gray-700 rounded p-2 border border-gray-600 disabled:opacity-70" onChange={handleChange} />
             </div>
           </div>
 
@@ -160,33 +158,33 @@ function App() {
               <label className="flex items-center cursor-pointer"><input disabled={isReadOnly} type="checkbox" name="isNegotiatedRate" checked={formData.isNegotiatedRate} onChange={handleChange} className="mr-1" /> Négocié</label>
             </div>
             
-            {formData.isCustomRate && <input disabled={isReadOnly} type="number" name="customLodgingTotal" value={formData.customLodgingTotal || ''} className="w-full bg-gray-700 rounded p-2 border border-yellow-600 text-yellow-300 mb-3 outline-none" placeholder="Montant plateforme" onChange={handleChange} />}
-            {formData.isNegotiatedRate && <input disabled={isReadOnly} type="number" name="negotiatedPricePerNight" value={formData.negotiatedPricePerNight || ''} className="w-full bg-gray-700 rounded p-2 border border-blue-500 text-blue-300 mb-3 outline-none" placeholder="Prix nuit négocié" onChange={handleChange} />}
+            {formData.isCustomRate && <input disabled={isReadOnly} type="number" name="customLodgingTotal" value={formData.customLodgingTotal || ''} className="w-full bg-gray-700 rounded p-2 border border-yellow-600 text-yellow-300 mb-3 outline-none disabled:opacity-70" placeholder="Montant plateforme" onChange={handleChange} />}
+            {formData.isNegotiatedRate && <input disabled={isReadOnly} type="number" name="negotiatedPricePerNight" value={formData.negotiatedPricePerNight || ''} className="w-full bg-gray-700 rounded p-2 border border-blue-500 text-blue-300 mb-3 outline-none disabled:opacity-70" placeholder="Prix nuit négocié" onChange={handleChange} />}
             
             <div className="mt-4 border-t border-gray-700 pt-3">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-bold text-gray-400 uppercase font-mono">Historique</span>
+                <span className="font-bold text-gray-400 uppercase">Versements</span>
                 {!isReadOnly && <button type="button" onClick={() => setFormData(prev => ({...prev, payments: [...prev.payments, { id: Date.now().toString(), date: new Date().toISOString().split('T')[0], amount: 0, method: 'Espèces' }]}))} className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase shadow">+ Add</button>}
               </div>
               {formData.payments.map((p) => (
                 <div key={p.id} className="bg-gray-700/40 p-2 rounded mb-2 border border-gray-600 text-[10px] relative">
                    {!isReadOnly && formData.payments.length > 1 && <button onClick={() => setFormData(prev => ({...prev, payments: prev.payments.filter(x => x.id !== p.id)}))} className="absolute top-1 right-1 text-red-400 font-bold px-1 z-10 text-[12px]">✕</button>}
-                   <input disabled={isReadOnly} type="date" value={p.date} onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, date: e.target.value} : x)}))} className="bg-gray-800 rounded p-1 mb-1 w-full border-none outline-none disabled:opacity-50" />
+                   <input disabled={isReadOnly} type="date" value={p.date} onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, date: e.target.value} : x)}))} className="bg-gray-800 rounded p-1 mb-1 w-full border-none outline-none disabled:opacity-70" />
                    <div className="flex gap-2">
-                    <input disabled={isReadOnly} type="number" value={p.amount || ''} placeholder="Montant" onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, amount: parseFloat(e.target.value) || 0} : x)}))} className="bg-gray-800 rounded p-1 flex-1 font-bold text-green-400 outline-none border-none disabled:opacity-50" />
-                    <select disabled={isReadOnly} value={p.method} onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, method: e.target.value} : x)}))} className="bg-gray-800 rounded p-1 flex-1 outline-none border-none disabled:opacity-50">{PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}</select>
+                    <input disabled={isReadOnly} type="number" value={p.amount || ''} placeholder="Montant" onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, amount: parseFloat(e.target.value) || 0} : x)}))} className="bg-gray-800 rounded p-1 flex-1 font-bold text-green-400 outline-none border-none disabled:opacity-70" />
+                    <select disabled={isReadOnly} value={p.method} onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, method: e.target.value} : x)}))} className="bg-gray-800 rounded p-1 flex-1 outline-none border-none disabled:opacity-70">{PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}</select>
                    </div>
                 </div>
               ))}
             </div>
           </div>
           
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-lg text-[10px]">
-            <select disabled={isReadOnly} name="hosts" multiple value={formData.hosts} onChange={handleChange} className="w-full bg-gray-700 rounded p-2 h-20 mb-3 border border-gray-600 outline-none disabled:opacity-50">
+          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-lg">
+            <select disabled={isReadOnly} name="hosts" multiple value={formData.hosts} onChange={handleChange} className="w-full bg-gray-700 rounded p-2 text-[10px] h-20 mb-3 border border-gray-600 outline-none disabled:opacity-70 text-gray-300">
               {HOSTS.map(h => <option key={h.id} value={h.label}>{h.label}</option>)}
             </select>
-            <input disabled={isReadOnly} type="text" name="signature" value={formData.signature} placeholder="Signature" className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 outline-none shadow-inner disabled:opacity-50" onChange={handleChange} />
-            <textarea disabled={isReadOnly} name="observations" value={formData.observations} rows={2} placeholder="Note..." className="w-full bg-gray-700 rounded p-2 border border-gray-600 text-xs outline-none disabled:opacity-50" onChange={handleChange}></textarea>
+            <input disabled={isReadOnly} type="text" name="signature" value={formData.signature} placeholder="Signature" className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 outline-none shadow-inner disabled:opacity-70" onChange={handleChange} />
+            <textarea disabled={isReadOnly} name="observations" value={formData.observations} rows={2} placeholder="Note..." className="w-full bg-gray-700 rounded p-2 border border-gray-600 text-xs outline-none disabled:opacity-70" onChange={handleChange}></textarea>
           </div>
         </form>
       </div>
@@ -195,15 +193,16 @@ function App() {
         <div className="mb-4 no-print flex w-full max-w-[210mm] justify-between items-center print:hidden px-2">
           <div className="flex flex-col"><h2 className="text-gray-600 font-bold text-sm uppercase">Détails Reçu</h2><span className="text-[10px] text-gray-400 font-mono font-bold uppercase">{formData.receiptId}</span></div>
           <div className="flex gap-2">
-            {isReadOnly && (
-              <button onClick={softDeleteBooking} disabled={isSaving} className="bg-red-600 text-white font-bold py-2 px-3 rounded shadow-md uppercase text-[10px] hover:bg-red-700">
-                {isSaving ? '...' : 'Annuler Réservation'}
-              </button>
-            )}
+            {/* LES DEUX BOUTONS DE POUVOIR SONT CACHÉS SI isReadOnly EST VRAI */}
             {!isReadOnly && (
-              <button onClick={saveToSheets} disabled={isSaving} className={`${saveStatus === 'success' ? 'bg-green-600' : 'bg-orange-600'} text-white font-bold py-2 px-3 rounded shadow uppercase text-[10px] transition-all`}>
-                {isSaving ? '...' : saveStatus === 'success' ? 'OK' : 'SAUVEGARDER'}
-              </button>
+              <>
+                <button onClick={softDeleteBooking} disabled={isSaving} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded shadow-md uppercase text-[10px] transition-all">
+                  {isSaving ? '...' : 'Annuler'}
+                </button>
+                <button onClick={saveToSheets} disabled={isSaving} className={`${saveStatus === 'success' ? 'bg-green-600' : 'bg-orange-600'} text-white font-bold py-2 px-3 rounded shadow uppercase text-[10px] transition-all`}>
+                  {isSaving ? '...' : saveStatus === 'success' ? 'OK' : 'SAUVEGARDER'}
+                </button>
+              </>
             )}
             <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded shadow-md text-[10px] uppercase transition-all">PDF</button>
           </div>
