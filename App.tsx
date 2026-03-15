@@ -4,7 +4,7 @@ import { ReceiptData } from './types';
 import ReceiptPreview from './components/ReceiptPreview';
 
 // --- CONFIGURATION SÉCURITÉ ---
-const ACCESS_PASSWORD = "TON_MOT_DE_PASSE_ICI"; // Remplace par ton vrai mot de passe
+const ACCESS_PASSWORD = "Odza2026"; // Remplace par ton vrai mot de passe
 
 function App() {
   const generateNewId = () => `RC-${Math.floor(100000 + Math.random() * 900000)}`;
