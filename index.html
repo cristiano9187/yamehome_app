@@ -2,7 +2,7 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>YameHome - Générateur de Reçus</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,12 +12,7 @@
 
       /* --- CONFIGURATION POUR L'IMPRESSION (PC & MOBILE) --- */
       @media print {
-        @page { 
-          margin: 0; 
-          size: A4; 
-        }
-        
-        /* On force le fond blanc sur les parents, mais on ne les cache pas ! */
+        @page { margin: 0; size: A4; }
         html, body, #root, .min-h-screen { 
           background: white !important;
           margin: 0 !important;
@@ -26,13 +21,7 @@
           -webkit-print-color-adjust: exact !important; 
           print-color-adjust: exact !important;
         }
-
-        /* On cache UNIQUEMENT le formulaire de saisie et les boutons */
-        .print\:hidden, .no-print, form, button { 
-          display: none !important; 
-        }
-
-        /* On réinitialise la colonne de droite pour qu'elle prenne toute la place */
+        .print\:hidden, .no-print, form, button { display: none !important; }
         div.w-full.md\:w-2\/3 {
           width: 100% !important;
           background: white !important;
@@ -41,8 +30,6 @@
           display: block !important;
           overflow: visible !important;
         }
-
-        /* Le reçu lui-même : On force l'affichage sans aucune transformation */
         #receipt-content {
           display: block !important;
           position: relative !important;
@@ -54,16 +41,13 @@
           border: none !important;
           transform: scale(1) !important;
         }
-
-        /* --- SUPPRESSION DES ÉLÉMENTS VERCEL (Toolbar, Feedback, etc.) --- */
         [id^="vercel-"], .vercel-toolbar, #vercel-live-feedback, [class*="vercel"] { 
           display: none !important; 
           opacity: 0 !important;
-          visibility: hidden !important;
         }
       }
 
-      /* --- ADAPTATION VISUELLE ÉCRAN MOBILE (PAS IMPRESSION) --- */
+      /* --- ADAPTATION VISUELLE ÉCRAN MOBILE --- */
       @media screen and (max-width: 768px) {
         #receipt-content {
           min-width: 210mm;
@@ -71,10 +55,7 @@
           transform-origin: top left;
           margin-bottom: -180mm;
         }
-        .preview-container {
-          overflow-x: auto !important;
-          display: block !important;
-        }
+        .preview-container { overflow-x: auto !important; display: block !important; }
       }
     </style>
     <script type="importmap">
@@ -87,10 +68,11 @@
       }
     }
     </script>
-    <link rel="stylesheet" href="/index.css">
+    <!-- FIX DES CHEMINS CI-DESSOUS (Enlèvement des / au début) -->
+    <link rel="stylesheet" href="index.css">
   </head>
   <body class="bg-gray-100 text-gray-800">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="index.tsx"></script>
   </body>
 </html>
