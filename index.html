@@ -11,7 +11,7 @@
       body { font-family: 'Inter', sans-serif; }
       @media print {
         @page { margin: 0; size: A4; }
-        html, body, #root, .min-h-screen { background: white !important; margin: 0 !important; padding: 0 !important; height: auto !important; }
+        html, body, #root { background: white !important; margin: 0 !important; padding: 0 !important; height: auto !important; }
         .print\:hidden, .no-print, form, button { display: none !important; }
         div.w-full.md\:w-2\/3 { width: 100% !important; background: white !important; padding: 0 !important; margin: 0 !important; display: block !important; overflow: visible !important; }
         #receipt-content { display: block !important; position: relative !important; width: 210mm !important; min-height: 297mm !important; margin: 0 !important; padding: 10mm !important; box-shadow: none !important; border: none !important; transform: scale(1) !important; }
@@ -22,15 +22,21 @@
         .preview-container { overflow-x: auto !important; display: block !important; }
       }
     </style>
+
+    <!-- IMPORTMAP INSPIRÉ DE TA VERSION STABLE MAIS OPTIMISÉ MOBILE -->
     <script type="importmap">
     {
       "imports": {
-        "react": "https://esm.sh/react@19.0.0",
-        "react-dom": "https://esm.sh/react-dom@19.0.0",
-        "react/jsx-runtime": "https://esm.sh/react@19.0.0/jsx-runtime"
+        "react": "https://cdn.jsdelivr.net/npm/react@19.0.0/index.js",
+        "react/": "https://cdn.jsdelivr.net/npm/react@19.0.0/",
+        "react-dom": "https://cdn.jsdelivr.net/npm/react-dom@19.0.0/index.js",
+        "react-dom/": "https://cdn.jsdelivr.net/npm/react-dom@19.0.0/",
+        "react/jsx-runtime": "https://cdn.jsdelivr.net/npm/react@19.0.0/jsx-runtime.js",
+        "webworker": "https://cdn.jsdelivr.net/npm/webworker@0.8.4/index.js"
       }
     }
     </script>
+    
     <link rel="stylesheet" href="index.css">
   </head>
   <body class="bg-gray-100 text-gray-800">
