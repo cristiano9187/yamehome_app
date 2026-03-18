@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
     const isVercel = process.env.VERCEL === '1';
 
     return {
-      base: isVercel ? '/' : '/yamehome-v2-test/',
+      base: isVercel ? '/' : '/yamehome_app/',
       
       server: {
         port: 3000,
