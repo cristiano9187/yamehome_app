@@ -3,7 +3,7 @@ import { TARIFS, PAYMENT_METHODS, HOSTS, getRateForApartment } from './constants
 import { ReceiptData } from './types';
 import ReceiptPreview from './components/ReceiptPreview';
 
-const ACCESS_PASSWORD = "TON_MOT_DE_PASSE"; // ⚠️ À remettre
+const ACCESS_PASSWORD = "Odza2026"; // ⚠️ À remettre
 
 function App() {
   const generateNewId = () => `RC-${Math.floor(100000 + Math.random() * 900000)}`;
