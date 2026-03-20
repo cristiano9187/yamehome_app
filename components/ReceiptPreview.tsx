@@ -25,7 +25,7 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
   const totalPaid = (data.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
   const remaining = grandTotal - totalPaid;
 
-  // PENALITE DYNAMIQUE
+  // PENALITE DYNAMIQUE (PRIX NUIT / 2)
   const latePenalty = Math.round(pricePerNight / 2);
 
   const standardPrice = rates.prix;
@@ -49,24 +49,16 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
-        {/* BLOC CLIENT */}
         <div className="border rounded-lg p-3 bg-gray-50 text-[11px]">
           <h3 className="text-blue-900 font-bold border-b mb-2 uppercase pb-1">Client</h3>
-          <div className="space-y-0.5">
-            <p><span className="font-bold">Nom:</span> {data.firstName} {data.lastName}</p>
-            <p><span className="font-bold">Tél:</span> {data.phone || 'N/A'}</p>
-            <p className="truncate"><span className="font-bold">Email:</span> {data.email || 'N/A'}</p>
-          </div>
+          <p><span className="font-bold">Nom:</span> {data.firstName} {data.lastName}</p>
+          <p><span className="font-bold">Tél:</span> {data.phone || 'N/A'}</p>
         </div>
-
-        {/* BLOC RÉSERVATION AVEC LE LIEU RÉTABLI */}
         <div className="border rounded-lg p-3 bg-gray-50 text-[11px]">
           <h3 className="text-blue-900 font-bold border-b mb-2 uppercase pb-1">Réservation</h3>
-          <div className="space-y-0.5">
-            <p className="truncate"><span className="font-bold">Logement:</span> {data.apartmentName}</p>
-            <p className="truncate"><span className="font-bold">Lieu:</span> {rates.address}</p>
-            <p><span className="font-bold">Séjour:</span> {nights} nuit(s) ({new Date(data.startDate).toLocaleDateString('fr-FR')} - {new Date(data.endDate).toLocaleDateString('fr-FR')})</p>
-          </div>
+          <p className="truncate"><span className="font-bold">Logement:</span> {data.apartmentName}</p>
+          <p className="truncate"><span className="font-bold">Lieu:</span> {rates.address}</p>
+          <p><span className="font-bold">Séjour:</span> {nights} nuit(s) ({new Date(data.startDate).toLocaleDateString('fr-FR')} - {new Date(data.endDate).toLocaleDateString('fr-FR')})</p>
         </div>
       </div>
 
@@ -75,7 +67,7 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
         <table className="w-full text-sm">
           <tbody>
             <tr className="border-t">
-              <td className="py-2">Prix par nuit {data.isNegotiatedRate ? '(Tarif Négocié)' : data.isCustomRate ? '(Tarif Plateforme)' : ''}</td>
+              <td className="py-2">Prix par nuit {data.isNegotiatedRate ? '(Tarif Négocié)' : data.isCustomRate ? '(Ajusté Plateforme)' : ''}</td>
               <td className="py-2 text-right font-semibold">{formatCurrency(pricePerNight)}</td>
             </tr>
             {discountPercent > 0 && (
@@ -106,7 +98,6 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
           <li>Départ tardif: pénalité de {formatCurrency(latePenalty)}.</li>
           {data.electricityCharge && <li><strong>Électricité à la charge du client.</strong></li>}
           {data.packEco && <li><strong>Pack ECO appliqué.</strong></li>}
-          
           <li className="mt-1">
             <span className="font-bold underline text-gray-700">Politique d'Annulation (1/3 Sous-total Séjour) :</span>
             <ul className="list-disc ml-5 mt-1 space-y-1">
@@ -115,7 +106,6 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({ data }) => {
               <li><span className="font-semibold text-red-600">Non remboursable :</span> Moins de 7 jours avant l'arrivée.</li>
             </ul>
           </li>
-
           {data.observations && <li><em>Note: {data.observations}</em></li>}
         </ul>
         {data.hosts.length > 0 && <div className="mt-3 pt-2 border-t border-gray-200 font-semibold text-[10px]">Vos hôtes sur place : {data.hosts.join(', ')}</div>}
