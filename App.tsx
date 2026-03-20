@@ -3,6 +3,7 @@ import { TARIFS, PAYMENT_METHODS, HOSTS, getRateForApartment } from './constants
 import { ReceiptData } from './types';
 import ReceiptPreview from './components/ReceiptPreview';
 
+// --- CONFIGURATION SÉCURITÉ ---
 const ACCESS_PASSWORD = "Odza2026"; 
 
 function App() {
@@ -36,35 +37,44 @@ function App() {
 
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfajRxCsKs0CLU4oiA6g5sirHUJHB3QdlJPeKOrjgFFDNQIeqbOxRlDqJ-VjAKZAuh2Q/exec';
 
+  // --- FIX CHARGEMENT (CORRECTION VARIABLE RES) ---
   const loadReceipt = useCallback(async (idToLoad: string) => {
+    if (!idToLoad) return;
     setIsSaving(true);
+    const cleanId = idToLoad.trim().toUpperCase();
+    const formattedId = cleanId.startsWith('RC-') ? cleanId : `RC-${cleanId}`;
     try {
-      const res = await fetch(`${SCRIPT_URL}?id=${idToLoad.trim().toUpperCase()}`);
+      const res = await fetch(`${SCRIPT_URL}?id=${formattedId}`);
       const data = await res.json();
-      if (!data.error) setFormData(data);
-    } catch (e) { console.error(e); } finally { setIsSaving(false); }
+      if (data.error) alert("Reçu non trouvé");
+      else setFormData(data);
+    } catch (e) { alert("Erreur de chargement"); } finally { setIsSaving(false); }
   }, []);
 
   useEffect(() => {
     const id = urlParams.get('id');
-    if (id) loadReceipt(id);
+    if (id) {
+        setIsReadOnly(true);
+        loadReceipt(id);
+    }
   }, [loadReceipt]);
 
-  const submitCleaningReport = async () => {
-    setIsSaving(true);
-    const payload = {
-      action: "CLEANING_REPORT",
-      receiptId: urlParams.get('menageId'), // On envoie l'ID pour le Debug
-      menageId: urlParams.get('menageId'),
-      calendarSlug: urlParams.get('slug'),
-      dateIntervention: urlParams.get('date'),
-      ...cleaningReport
-    };
-    try {
-      await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-      alert("Rapport envoyé !");
-      window.location.href = window.location.origin + window.location.pathname;
-    } catch (e) { alert("Erreur"); } finally { setIsSaving(false); }
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === ACCESS_PASSWORD) {
+      setIsAuthenticated(true);
+      sessionStorage.setItem('yame_auth', 'true');
+    } else alert("Erreur");
+  };
+
+  const handleChange = (e: any) => {
+    if (isReadOnly) return;
+    const { name, value, type, checked } = e.target;
+    if (type === 'checkbox') {
+      if (name === 'isCustomRate') setFormData(prev => ({ ...prev, isCustomRate: checked, isNegotiatedRate: checked ? false : prev.isNegotiatedRate }));
+      else if (name === 'isNegotiatedRate') setFormData(prev => ({ ...prev, isNegotiatedRate: checked, isCustomRate: checked ? false : prev.isCustomRate }));
+      else setFormData(prev => ({ ...prev, [name]: checked }));
+    } else setFormData(prev => ({ ...prev, [name]: type === 'number' ? (parseFloat(value) || 0) : value }));
   };
 
   const saveToSheets = async () => {
@@ -98,6 +108,23 @@ function App() {
     } catch (error) { setSaveStatus('error'); } finally { setIsSaving(false); }
   };
 
+  const submitCleaningReport = async () => {
+    setIsSaving(true);
+    const payload = {
+      action: "CLEANING_REPORT",
+      receiptId: urlParams.get('menageId'),
+      menageId: urlParams.get('menageId'),
+      calendarSlug: urlParams.get('slug'),
+      dateIntervention: urlParams.get('date'),
+      ...cleaningReport
+    };
+    try {
+      await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+      alert("Rapport envoyé !");
+      window.location.href = window.location.origin + window.location.pathname;
+    } catch (e) { alert("Erreur d'envoi"); } finally { setIsSaving(false); }
+  };
+
   const softDeleteBooking = async () => {
     if (window.confirm("Annuler réservation ?")) {
       setIsSaving(true);
@@ -108,33 +135,24 @@ function App() {
     }
   };
 
-  const handleChange = (e: any) => {
-    if (isReadOnly) return;
-    const { name, value, type, checked } = e.target;
-    if (type === 'checkbox') {
-      if (name === 'isCustomRate') setFormData(prev => ({ ...prev, isCustomRate: checked, isNegotiatedRate: checked ? false : prev.isNegotiatedRate }));
-      else if (name === 'isNegotiatedRate') setFormData(prev => ({ ...prev, isNegotiatedRate: checked, isCustomRate: checked ? false : prev.isCustomRate }));
-      else setFormData(prev => ({ ...prev, [name]: checked }));
-    } else setFormData(prev => ({ ...prev, [name]: type === 'number' ? (parseFloat(value) || 0) : value }));
-  };
-
   if (isCleaningMode) {
     return (
       <div className="min-h-screen bg-gray-900 text-white p-6 font-sans flex flex-col items-center">
-        <div className="w-full max-w-md bg-gray-800 p-6 rounded-lg border border-blue-500/30">
+        <div className="w-full max-w-md bg-gray-800 p-6 rounded-lg border border-blue-500/30 shadow-2xl">
           <h1 className="text-xl font-bold text-blue-400 mb-2 italic">MÉNAGE YAMEHOME</h1>
-          <p className="text-[10px] text-gray-400 mb-6 uppercase tracking-widest">{urlParams.get('slug')} - {urlParams.get('date')}</p>
+          <p className="text-[10px] text-gray-400 mb-6 uppercase">{urlParams.get('slug')} - {urlParams.get('date')}</p>
           <div className="space-y-4">
-            <input type="text" className="w-full bg-gray-700 rounded p-3 text-sm outline-none" placeholder="Agent (Ex: Madeleine)" onChange={(e) => setCleaningReport({...cleaningReport, agent: e.target.value})} />
-            <select className="w-full bg-gray-700 rounded p-3 text-sm outline-none" onChange={(e) => setCleaningReport({...cleaningReport, status: e.target.value})}>
-              <option value="EFFECTUÉ">✅ EFFECTUÉ</option>
-              <option value="ANOMALIE">⚠️ ANOMALIE</option>
-              <option value="REPORTÉ">⏳ REPORTÉ</option>
+            <input type="text" className="w-full bg-gray-700 rounded p-3 text-sm outline-none" placeholder="Agent (Ex: Madeleine)" value={cleaningReport.agent} onChange={(e) => setCleaningReport({...cleaningReport, agent: e.target.value})} />
+            <select className="w-full bg-gray-700 rounded p-3 text-sm outline-none" value={cleaningReport.status} onChange={(e) => setCleaningReport({...cleaningReport, status: e.target.value})}>
+              <option value="EFFECTUÉ">✅ MÉNAGE EFFECTUÉ</option>
+              <option value="ANOMALIE">⚠️ ANOMALIE SIGNALÉE</option>
+              <option value="REPORTÉ">⏳ REPORTÉ / À REPROGRAMMER</option>
+              <option value="ANNULÉ">❌ MÉNAGE ANNULÉ</option>
             </select>
             <textarea rows={2} className="w-full bg-gray-700 rounded p-3 text-sm outline-none" placeholder="Note générale..." onChange={(e) => setCleaningReport({...cleaningReport, feedback: e.target.value})}></textarea>
             <div className="grid grid-cols-2 gap-3">
               <textarea rows={2} className="bg-gray-700 rounded p-2 text-[11px] border border-red-900/30 outline-none" placeholder="Casse ?" onChange={(e) => setCleaningReport({...cleaningReport, damages: e.target.value})}></textarea>
-              <textarea rows={2} className="bg-gray-700 rounded p-2 text-[11px] border border-orange-900/30 outline-none" placeholder="Usure ?" onChange={(e) => setCleaningReport({...cleaningReport, maintenance: e.target.value})}></textarea>
+              <textarea rows={2} className="bg-gray-700 rounded p-2 text-[11px] border border-orange-900/30 outline-none" placeholder="Maintenance ?" onChange={(e) => setCleaningReport({...cleaningReport, maintenance: e.target.value})}></textarea>
             </div>
             <button onClick={submitCleaningReport} disabled={isSaving || !cleaningReport.agent} className="w-full bg-blue-600 font-bold py-4 rounded-lg mt-4 shadow-lg">{isSaving ? 'ENVOI...' : 'VALIDER'}</button>
           </div>
@@ -146,10 +164,10 @@ function App() {
   if (!isAuthenticated && !isReadOnly) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <form onSubmit={(e) => { e.preventDefault(); if (passwordInput === ACCESS_PASSWORD) { setIsAuthenticated(true); sessionStorage.setItem('yame_auth', 'true'); } else alert("Erreur"); }} className="bg-gray-800 p-8 rounded-lg shadow-2xl border border-gray-700 w-full max-w-sm text-center">
-          <h1 className="text-2xl font-bold text-blue-400 mb-6 italic">YAMEHOME</h1>
+        <form onSubmit={handleLogin} className="bg-gray-800 p-8 rounded-lg shadow-2xl border border-gray-700 w-full max-w-sm text-center">
+          <h1 className="text-2xl font-bold text-blue-400 mb-6 italic uppercase">YameHome</h1>
           <input type="password" placeholder="Pass" className="w-full bg-gray-700 text-white rounded p-3 mb-4 outline-none border border-gray-600 focus:border-blue-500" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} autoFocus />
-          <button type="submit" className="w-full bg-blue-600 font-bold py-3 rounded">ENTRER</button>
+          <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded uppercase transition-all shadow-lg">Entrer</button>
         </form>
       </div>
     );
@@ -161,8 +179,8 @@ function App() {
         <div className="mb-6 flex justify-between items-center">
           <h1 className="text-xl font-bold text-blue-400 italic uppercase">YameHome</h1>
           <div className="flex gap-2">
-            <button onClick={() => window.location.href = window.location.origin + window.location.pathname} className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded font-bold uppercase transition-all">Quitter</button>
-            <button onClick={() => { setFormData(getInitialState()); setIsReadOnly(false); setSearchId(''); }} className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded font-bold shadow-lg">Nouveau</button>
+            <button onClick={() => window.location.href = window.location.origin + window.location.pathname} className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded font-bold uppercase transition-all text-[9px]">Quitter</button>
+            <button onClick={() => { localStorage.removeItem('yame_draft'); setFormData(getInitialState()); setIsReadOnly(false); setSearchId(''); }} className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded font-bold uppercase shadow-lg text-[9px]">Nouveau</button>
           </div>
         </div>
         <div className="bg-blue-900/20 p-4 rounded border border-blue-500/30 mb-6 text-center shadow-inner">
@@ -187,9 +205,10 @@ function App() {
               {Object.keys(TARIFS).map(key => <option key={key} value={key}>{key}</option>)}
             </select>
             {TARIFS[formData.apartmentName]?.units && TARIFS[formData.apartmentName].units!.length > 1 && (
-              <div className="mb-3 p-2 bg-blue-900/30 border border-blue-500/50 rounded">
+              <div className="mb-3 p-2 bg-blue-900/30 border border-blue-500/50 rounded animate-pulse text-center">
+                <label className="text-[10px] font-bold block mb-1">UNITÉ PHYSIQUE</label>
                 <select disabled={isReadOnly} name="calendarSlug" value={formData.calendarSlug} onChange={handleChange} className="w-full bg-gray-700 p-1.5 rounded border border-blue-400 outline-none disabled:opacity-50">
-                  <option value="">-- Préciser l'unité --</option>
+                  <option value="">-- Préciser --</option>
                   {TARIFS[formData.apartmentName].units!.map(u => <option key={u} value={u}>{u}</option>)}
                 </select>
               </div>
@@ -208,9 +227,9 @@ function App() {
             {formData.isCustomRate && <input disabled={isReadOnly} type="number" name="customLodgingTotal" value={formData.customLodgingTotal || ''} className="w-full bg-gray-700 rounded p-2 border border-yellow-600 text-yellow-300 mb-3 outline-none" placeholder="Total" onChange={handleChange} />}
             {formData.isNegotiatedRate && <input disabled={isReadOnly} type="number" name="negotiatedPricePerNight" value={formData.negotiatedPricePerNight || ''} className="w-full bg-gray-700 rounded p-2 border border-blue-500 text-blue-300 mb-3 outline-none" placeholder="Prix nuit" onChange={handleChange} />}
             <div className="mt-4 border-t border-gray-700 pt-3">
-              <div className="flex justify-between items-center mb-2"><span className="font-bold text-gray-400 uppercase">Versements</span>{!isReadOnly && <button type="button" onClick={() => setFormData(prev => ({...prev, payments: [...prev.payments, { id: Date.now().toString(), date: new Date().toISOString().split('T')[0], amount: 0, method: 'Espèces' }]}))} className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase shadow">+ Add</button>}</div>
+              <div className="flex justify-between items-center mb-2"><span className="font-bold text-gray-400 uppercase font-mono">Versements</span>{!isReadOnly && <button type="button" onClick={() => setFormData(prev => ({...prev, payments: [...prev.payments, { id: Date.now().toString(), date: new Date().toISOString().split('T')[0], amount: 0, method: 'Espèces' }]}))} className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase shadow">+ Add</button>}</div>
               {formData.payments.map((p) => (
-                <div key={p.id} className="bg-gray-700/40 p-2 rounded mb-2 border border-gray-600 text-[10px] relative text-gray-300">
+                <div key={p.id} className="bg-gray-700/40 p-2 rounded mb-2 border border-gray-600 text-[10px] relative">
                    {!isReadOnly && formData.payments.length > 1 && <button onClick={() => setFormData(prev => ({...prev, payments: prev.payments.filter(x => x.id !== p.id)}))} className="absolute top-1 right-1 text-red-400 font-bold px-1 z-10">✕</button>}
                    <input disabled={isReadOnly} type="date" value={p.date} onChange={(e) => setFormData(prev => ({...prev, payments: prev.payments.map(x => x.id === p.id ? {...x, date: e.target.value} : x)}))} className="bg-gray-800 rounded p-1 mb-1 w-full border-none outline-none disabled:opacity-50" />
                    <div className="flex gap-2">
