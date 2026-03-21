@@ -27,22 +27,16 @@ function App() {
   const [passwordInput, setPasswordInput] = useState('');
   
   const urlParams = new URLSearchParams(window.location.search);
-  const isCleaningMode = urlParams.has('menageId');
+  const [isCleaningMode, setIsCleaningMode] = useState(urlParams.has('menageId'));
   const [isReadOnly, setIsReadOnly] = useState(urlParams.has('id'));
+  const [isCleaningReadOnly, setIsCleaningReadOnly] = useState(false);
 
   const [cleaningReport, setCleaningReport] = useState({
-    agent: '', status: 'EFFECTUÉ', feedback: '', damages: '', maintenance: ''
+    agent: '', status: 'EFFECTUÉ', feedback: '', damages: '', maintenance: '',
+    manualApt: '', manualDate: new Date().toISOString().split('T')[0]
   });
 
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfajRxCsKs0CLU4oiA6g5sirHUJHB3QdlJPeKOrjgFFDNQIeqbOxRlDqJ-VjAKZAuh2Q/exec';
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordInput === ACCESS_PASSWORD) {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('yame_auth', 'true');
-    } else alert("Mot de passe incorrect");
-  };
 
   const loadReceipt = useCallback(async (idToLoad: string) => {
     setIsSaving(true);
@@ -50,13 +44,44 @@ function App() {
       const res = await fetch(`${SCRIPT_URL}?id=${idToLoad.trim().toUpperCase()}`);
       const data = await res.json();
       if (!data.error) setFormData(data);
-    } catch (e) { alert("Erreur réseau"); } finally { setIsSaving(false); }
+    } catch (e) { console.error(e); } finally { setIsSaving(false); }
+  }, []);
+
+  // --- NOUVEAU : CHARGER LE RAPPORT DE MÉNAGE S'IL EXISTE ---
+  const loadCleaningReport = useCallback(async (mId: string) => {
+    setIsSaving(true);
+    try {
+      const res = await fetch(`${SCRIPT_URL}?id=${mId}`);
+      const data = await res.json();
+      if (!data.error) {
+        setCleaningReport({
+          agent: data.agent,
+          status: data.status,
+          feedback: data.feedback,
+          damages: data.damages,
+          maintenance: data.maintenance,
+          manualApt: data.calendarSlug,
+          manualDate: data.dateIntervention
+        });
+        setIsCleaningReadOnly(true); // Mode consultation par défaut
+      }
+    } catch (e) { console.error(e); } finally { setIsSaving(false); }
   }, []);
 
   useEffect(() => {
     const id = urlParams.get('id');
+    const mId = urlParams.get('menageId');
     if (id) { setIsReadOnly(true); loadReceipt(id); }
-  }, [loadReceipt]);
+    if (mId) loadCleaningReport(mId);
+  }, [loadReceipt, loadCleaningReport]);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === ACCESS_PASSWORD) {
+      setIsAuthenticated(true);
+      sessionStorage.setItem('yame_auth', 'true');
+    } else alert("Erreur");
+  };
 
   const handleChange = (e: any) => {
     if (isReadOnly) return;
@@ -70,9 +95,9 @@ function App() {
 
   const saveToSheets = async () => {
     if (isReadOnly) return;
-    if (!formData.apartmentName || !formData.lastName) return alert("Nom et Appartement requis");
+    if (!formData.apartmentName || !formData.lastName) return alert("Remplir Nom et Appartement requis");
     const units = TARIFS[formData.apartmentName]?.units || [];
-    const finalSlug = units.length === 1 ? units[0] : formData.calendarSlug;
+    const finalSlug = (units.length === 1) ? units[0] : formData.calendarSlug;
     if (units.length > 1 && !finalSlug) return alert("Précisez l'unité spécifique");
 
     setIsSaving(true);
@@ -94,9 +119,25 @@ function App() {
 
     try {
       await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-      setSaveStatus('success');
-      setTimeout(() => setSaveStatus('idle'), 3000);
+      setSaveStatus('success'); setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (error) { setSaveStatus('error'); } finally { setIsSaving(false); }
+  };
+
+  const submitCleaningReport = async () => {
+    setIsSaving(true);
+    const isManual = !urlParams.has('menageId');
+    const payload = {
+      action: "CLEANING_REPORT",
+      menageId: isManual ? `MAN-${Date.now()}` : urlParams.get('menageId'),
+      calendarSlug: isManual ? cleaningReport.manualApt : urlParams.get('slug'),
+      dateIntervention: isManual ? cleaningReport.manualDate : urlParams.get('date'),
+      ...cleaningReport
+    };
+    try {
+      await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+      alert("Rapport envoyé !");
+      window.location.href = window.location.origin + window.location.pathname;
+    } catch (e) { alert("Erreur"); } finally { setIsSaving(false); }
   };
 
   const softDeleteBooking = async () => {
@@ -109,67 +150,102 @@ function App() {
     }
   };
 
-  const submitCleaningReport = async () => {
-    setIsSaving(true);
-    const payload = { action: "CLEANING_REPORT", menageId: urlParams.get('menageId'), calendarSlug: urlParams.get('slug'), dateIntervention: urlParams.get('date'), ...cleaningReport };
-    try {
-      await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-      alert("Rapport envoyé !"); window.location.href = window.location.origin + window.location.pathname;
-    } catch (e) { alert("Erreur"); } finally { setIsSaving(false); }
-  };
-
+  // --- RENDU MÉNAGE ---
   if (isCleaningMode) {
+    const isManual = !urlParams.has('menageId');
     return (
       <div className="min-h-screen bg-gray-900 text-white p-6 font-sans flex flex-col items-center">
-        <div className="w-full max-w-md bg-gray-800 p-6 rounded-lg border border-blue-500/30">
+        <div className="w-full max-w-md bg-gray-800 p-6 rounded-lg border border-blue-500/30 shadow-2xl">
           <h1 className="text-xl font-bold text-blue-400 mb-2 italic">MÉNAGE YAMEHOME</h1>
-          <p className="text-[10px] text-gray-400 mb-6 uppercase">{urlParams.get('slug')} - {urlParams.get('date')}</p>
-          <div className="space-y-4">
-            <input type="text" className="w-full bg-gray-700 rounded p-3 text-sm outline-none" placeholder="Agent (Madeleine...)" onChange={(e) => setCleaningReport({...cleaningReport, agent: e.target.value})} />
-            <select className="w-full bg-gray-700 rounded p-3 text-sm outline-none" onChange={(e) => setCleaningReport({...cleaningReport, status: e.target.value})}>
-              <option value="EFFECTUÉ">✅ EFFECTUÉ</option>
-              <option value="ANOMALIE">⚠️ ANOMALIE</option>
-              <option value="REPORTÉ">⏳ REPORTÉ</option>
-            </select>
-            <textarea rows={2} className="w-full bg-gray-700 rounded p-3 text-sm outline-none" placeholder="Feedback..." onChange={(e) => setCleaningReport({...cleaningReport, feedback: e.target.value})}></textarea>
-            <button onClick={submitCleaningReport} disabled={isSaving || !cleaningReport.agent} className="w-full bg-blue-600 font-bold py-4 rounded-lg mt-4 shadow-lg uppercase">{isSaving ? 'ENVOI...' : 'VALIDER'}</button>
+          <div className="mb-6">
+            {isManual ? (
+               <div className="space-y-2 text-left">
+                 <label className="text-[10px] text-gray-500 font-bold uppercase">Logement</label>
+                 <select className="w-full bg-gray-700 rounded p-2 text-xs" onChange={(e) => setCleaningReport({...cleaningReport, manualApt: e.target.value})}>
+                    <option value="">-- Choisir Appartement --</option>
+                    {Object.values(TARIFS).flatMap(t => t.units || []).map(u => <option key={u} value={u}>{u}</option>)}
+                 </select>
+                 <label className="text-[10px] text-gray-500 font-bold uppercase">Date</label>
+                 <input type="date" className="w-full bg-gray-700 rounded p-2 text-xs" value={cleaningReport.manualDate} onChange={(e) => setCleaningReport({...cleaningReport, manualDate: e.target.value})} />
+               </div>
+            ) : (
+              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{urlParams.get('slug')} - {urlParams.get('date')}</p>
+            )}
+          </div>
+          <div className="space-y-4 text-left">
+            <div>
+              <label className="text-[10px] text-gray-500 font-bold">AGENT</label>
+              <input disabled={isCleaningReadOnly} type="text" className="w-full bg-gray-700 rounded p-3 text-sm outline-none disabled:opacity-50" placeholder="Agent (Madeleine...)" value={cleaningReport.agent} onChange={(e) => setCleaningReport({...cleaningReport, agent: e.target.value})} />
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-500 font-bold">STATUT</label>
+              <select disabled={isCleaningReadOnly} className="w-full bg-gray-700 rounded p-3 text-sm outline-none disabled:opacity-50" value={cleaningReport.status} onChange={(e) => setCleaningReport({...cleaningReport, status: e.target.value})}>
+                <option value="EFFECTUÉ">✅ EFFECTUÉ</option>
+                <option value="ANOMALIE">⚠️ ANOMALIE SIGNALÉE</option>
+                <option value="REPORTÉ">⏳ REPORTÉ</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-500 font-bold">FEEDBACK</label>
+              <textarea disabled={isCleaningReadOnly} rows={2} className="w-full bg-gray-700 rounded p-3 text-sm outline-none disabled:opacity-50" placeholder="Note générale..." value={cleaningReport.feedback} onChange={(e) => setCleaningReport({...cleaningReport, feedback: e.target.value})}></textarea>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <textarea disabled={isCleaningReadOnly} rows={2} className="bg-gray-700 rounded p-2 text-[11px] border border-red-900/30 outline-none disabled:opacity-50" placeholder="Casse ?" value={cleaningReport.damages} onChange={(e) => setCleaningReport({...cleaningReport, damages: e.target.value})}></textarea>
+              <textarea disabled={isCleaningReadOnly} rows={2} className="bg-gray-700 rounded p-2 text-[11px] border border-orange-900/30 outline-none disabled:opacity-50" placeholder="Maintenance ?" value={cleaningReport.maintenance} onChange={(e) => setCleaningReport({...cleaningReport, maintenance: e.target.value})}></textarea>
+            </div>
+
+            {/* BOUTONS DYNAMIQUES MÉNAGE */}
+            {isCleaningReadOnly ? (
+               <div className="flex flex-col gap-2 mt-4">
+                 <button onClick={() => setIsCleaningReadOnly(false)} className="w-full bg-orange-600 font-bold py-3 rounded-lg uppercase text-xs">Modifier le Rapport</button>
+                 <button onClick={() => setIsCleaningMode(false)} className="w-full text-gray-400 text-xs">Retour</button>
+               </div>
+            ) : (
+              <div className="flex gap-2 mt-4">
+                <button onClick={() => setIsCleaningMode(false)} className="bg-gray-600 font-bold py-3 px-4 rounded-lg text-xs uppercase text-white">Annuler</button>
+                <button onClick={submitCleaningReport} disabled={isSaving || !cleaningReport.agent} className="flex-1 bg-blue-600 font-bold py-3 rounded-lg shadow-lg uppercase text-white">{isSaving ? 'ENVOI...' : 'VALIDER'}</button>
+              </div>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
+  // --- RENDU LOGIN ---
   if (!isAuthenticated && !isReadOnly) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <form onSubmit={handleLogin} className="bg-gray-800 p-8 rounded-lg shadow-2xl border border-gray-700 w-full max-w-sm text-center">
+        <form onSubmit={handleLogin} className="bg-gray-800 p-8 rounded-lg shadow-2xl border border-gray-700 w-full max-w-sm text-center font-sans text-white">
           <h1 className="text-2xl font-bold text-blue-400 mb-6 italic uppercase font-mono">YameHome</h1>
           <input type="password" placeholder="Pass" className="w-full bg-gray-700 text-white rounded p-3 mb-4 outline-none border border-gray-600 focus:border-blue-500" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} autoFocus />
-          <button type="submit" className="w-full bg-blue-600 font-bold py-3 rounded uppercase tracking-widest">Entrer</button>
+          <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded uppercase tracking-widest transition-all shadow-lg">Entrer</button>
         </form>
       </div>
     );
   }
 
+  // --- RENDU APP PRINCIPALE ---
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-900 text-white font-sans text-xs">
       <div className="w-full md:w-1/3 p-6 overflow-y-auto h-auto md:h-screen print:hidden shadow-2xl border-r border-gray-800">
         <div className="mb-6 flex justify-between items-center">
           <h1 className="text-xl font-bold text-blue-400 italic font-mono uppercase tracking-tighter">YAMEHOME</h1>
           <div className="flex gap-2">
-            <button onClick={() => window.location.href = window.location.origin + window.location.pathname} className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded font-bold text-[9px]">Quitter</button>
-            <button onClick={() => { localStorage.removeItem('yame_draft'); setFormData(getInitialState()); setIsReadOnly(false); setSearchId(''); }} className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded font-bold text-[9px] shadow-lg">Nouveau</button>
+            <button onClick={() => window.location.href = window.location.origin + window.location.pathname} className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded font-bold uppercase transition-all text-[9px]">Quitter</button>
+            <button onClick={() => { localStorage.removeItem('yame_draft'); setFormData(getInitialState()); setIsReadOnly(false); setSearchId(''); }} className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded font-bold uppercase transition-all shadow-lg text-[9px]">Nouveau</button>
           </div>
         </div>
-        <div className="bg-blue-900/20 p-4 rounded border border-blue-500/30 mb-6 text-center shadow-inner">
-          <div className="flex gap-2">
+        <div className="bg-blue-900/20 p-4 rounded border border-blue-500/30 mb-6 text-center">
+           <button onClick={() => setIsCleaningMode(true)} className="w-full bg-orange-600 text-white font-bold py-2 rounded text-[10px] uppercase shadow-md mb-2">Ménage Libre 🧹</button>
+           <div className="flex gap-2">
             <input type="text" placeholder="Recharger ID..." className="flex-1 bg-gray-800 rounded p-2 border border-blue-400/50 outline-none text-xs" value={searchId} onChange={(e) => setSearchId(e.target.value)} />
             <button onClick={() => loadReceipt(searchId)} className="bg-blue-600 px-3 py-2 rounded font-bold uppercase hover:bg-blue-700 transition-all text-[10px]">OK</button>
-          </div>
+           </div>
         </div>
         <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-md">
-            <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-center">Client</h3>
+          <div className="bg-gray-800 p-4 rounded border border-gray-700">
+            <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-center text-gray-400 text-[10px]">Client</h3>
             <div className="grid grid-cols-2 gap-3 mb-3">
               <input disabled={isReadOnly} type="text" name="firstName" value={formData.firstName} placeholder="Prénom" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-50" onChange={handleChange} />
               <input disabled={isReadOnly} type="text" name="lastName" value={formData.lastName} placeholder="Nom" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-50" onChange={handleChange} />
@@ -177,7 +253,7 @@ function App() {
             <input disabled={isReadOnly} type="tel" name="phone" value={formData.phone} placeholder="Tél" className="w-full bg-gray-700 rounded p-2 border border-gray-600 outline-none disabled:opacity-50" onChange={handleChange} />
           </div>
           <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-sm">
-            <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-center">Logement</h3>
+            <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-center text-gray-400 text-[10px]">Réservation</h3>
             <select disabled={isReadOnly} name="apartmentName" value={formData.apartmentName} className="w-full bg-gray-700 rounded p-2 border border-gray-600 mb-3 text-xs outline-none disabled:opacity-50" onChange={handleChange}>
               <option value="">-- Choisir --</option>
               {Object.keys(TARIFS).map(key => <option key={key} value={key}>{key}</option>)}
@@ -195,8 +271,8 @@ function App() {
               <input disabled={isReadOnly} type="date" name="endDate" value={formData.endDate} className="bg-gray-700 rounded p-2 border border-gray-600 disabled:opacity-50" onChange={handleChange} />
             </div>
           </div>
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 shadow-sm">
-            <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-center text-gray-400">Tarification</h3>
+          <div className="bg-gray-800 p-4 rounded border border-gray-700">
+            <h3 className="uppercase font-bold mb-3 border-b border-gray-700 pb-1 italic text-center text-gray-400 text-[10px]">Tarification</h3>
             <div className="flex gap-4 mb-3">
               <label className="flex items-center text-[10px] cursor-pointer"><input disabled={isReadOnly} type="checkbox" name="isCustomRate" checked={formData.isCustomRate} onChange={handleChange} className="mr-1" /> Platef.</label>
               <label className="flex items-center text-[10px] cursor-pointer"><input disabled={isReadOnly} type="checkbox" name="isNegotiatedRate" checked={formData.isNegotiatedRate} onChange={handleChange} className="mr-1" /> Négocié</label>
@@ -231,12 +307,12 @@ function App() {
         </form>
       </div>
       <div className="w-full md:w-2/3 bg-gray-200 p-2 md:p-8 flex flex-col items-start md:items-center overflow-y-auto h-auto md:h-screen preview-container">
-        <div className="mb-4 no-print flex w-full max-w-[210mm] justify-between items-center print:hidden px-2">
+        <div className="mb-4 no-print flex w-full max-w-[210mm] justify-between items-center print:hidden px-2 text-white">
           <div className="flex flex-col"><h2 className="text-gray-600 font-bold text-sm uppercase">Détails Reçu</h2><span className="text-[10px] text-gray-400 font-mono font-bold uppercase">{formData.receiptId}</span></div>
           <div className="flex gap-2">
             {!isReadOnly && (
               <>
-                <button onClick={softDeleteBooking} className="bg-red-600 text-white font-bold py-2 px-3 rounded shadow-md uppercase text-[10px] transition-all">Annuler</button>
+                <button onClick={softDeleteBooking} className="bg-red-600 text-white font-bold py-2 px-3 rounded shadow-md uppercase text-[10px]">Annuler</button>
                 <button onClick={saveToSheets} disabled={isSaving} className={`${saveStatus === 'success' ? 'bg-green-600' : 'bg-orange-600'} text-white font-bold py-2 px-3 rounded shadow uppercase text-[10px] transition-all`}>
                   {isSaving ? '...' : saveStatus === 'success' ? 'OK' : 'SAUVEGARDER'}
                 </button>
